@@ -12,9 +12,7 @@ let expandedFolders = new Set();
 let theme = 'dark';
 let displayOptions = {
   title: true,
-  url: true,
-  keywords: true,
-  tags: true
+  url: true
 };
 let currentEditItem = null;
 
@@ -437,12 +435,6 @@ function createBookmarkElement(bookmark) {
   if (displayOptions.url) {
     bookmarkInfoHtml += `<div class="bookmark-url">${escapeHtml(new URL(bookmark.url).hostname)}</div>`;
   }
-  if (displayOptions.keywords && bookmark.keyword) {
-    bookmarkInfoHtml += `<div class="bookmark-keywords" style="font-size: 11px; color: var(--md-sys-color-tertiary);">🔑 ${escapeHtml(bookmark.keyword)}</div>`;
-  }
-  if (displayOptions.tags && bookmark.tags && bookmark.tags.length > 0) {
-    bookmarkInfoHtml += `<div class="bookmark-tags">${bookmark.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}</div>`;
-  }
 
   bookmarkDiv.innerHTML = `
     <div class="status-indicators">
@@ -810,11 +802,7 @@ function openEditModal(item, isFolder = false) {
   const modalTitle = document.getElementById('editModalTitle');
   const editTitle = document.getElementById('editTitle');
   const editUrl = document.getElementById('editUrl');
-  const editKeywords = document.getElementById('editKeywords');
-  const editTags = document.getElementById('editTags');
   const editUrlGroup = document.getElementById('editUrlGroup');
-  const editKeywordsGroup = document.getElementById('editKeywordsGroup');
-  const editTagsGroup = document.getElementById('editTagsGroup');
 
   // Set modal title
   modalTitle.textContent = isFolder ? 'Rename Folder' : 'Edit Bookmark';
@@ -823,19 +811,12 @@ function openEditModal(item, isFolder = false) {
   editTitle.value = item.title || '';
 
   if (isFolder) {
-    // Hide bookmark-specific fields for folders
+    // Hide URL field for folders
     editUrlGroup.style.display = 'none';
-    editKeywordsGroup.style.display = 'none';
-    editTagsGroup.style.display = 'none';
   } else {
-    // Show all fields for bookmarks
+    // Show URL field for bookmarks
     editUrlGroup.style.display = 'block';
-    editKeywordsGroup.style.display = 'block';
-    editTagsGroup.style.display = 'block';
-
     editUrl.value = item.url || '';
-    editKeywords.value = item.keyword || '';
-    editTags.value = item.tags ? item.tags.join(', ') : '';
   }
 
   modal.classList.remove('hidden');
@@ -855,16 +836,12 @@ async function saveEditModal() {
 
   const editTitle = document.getElementById('editTitle');
   const editUrl = document.getElementById('editUrl');
-  const editKeywords = document.getElementById('editKeywords');
-  const editTags = document.getElementById('editTags');
 
   const isFolder = !currentEditItem.url;
   const updates = { title: editTitle.value };
 
   if (!isFolder) {
     updates.url = editUrl.value;
-    // Note: Firefox bookmarks API doesn't support keywords and tags directly
-    // These would need to be stored separately or as part of title/description
   }
 
   if (isPreviewMode) {
@@ -1097,8 +1074,6 @@ function setupEventListeners() {
   // Display option toggles
   const displayTitle = document.getElementById('displayTitle');
   const displayUrl = document.getElementById('displayUrl');
-  const displayKeywords = document.getElementById('displayKeywords');
-  const displayTags = document.getElementById('displayTags');
 
   displayTitle.addEventListener('change', (e) => {
     // Ensure at least Title or URL is checked
@@ -1117,16 +1092,6 @@ function setupEventListeners() {
       return;
     }
     displayOptions.url = e.target.checked;
-    renderBookmarks();
-  });
-
-  displayKeywords.addEventListener('change', (e) => {
-    displayOptions.keywords = e.target.checked;
-    renderBookmarks();
-  });
-
-  displayTags.addEventListener('change', (e) => {
-    displayOptions.tags = e.target.checked;
     renderBookmarks();
   });
 
