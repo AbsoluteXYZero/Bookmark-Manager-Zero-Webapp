@@ -448,54 +448,56 @@
       height: 14px;
     }
 
-    /* Bookmark Preview Styles */
+    /* Bookmark Preview Styles - Based on React webapp */
     .bookmark-preview-container {
       flex-shrink: 0;
       width: 0;
-      height: 70px;
-      background: var(--md-sys-color-surface);
-      border: 2px solid var(--md-sys-color-primary);
-      border-radius: 8px;
+      height: 100%;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: var(--md-elevation-3);
       pointer-events: none;
       user-select: none;
-      margin-left: auto;
-      margin-right: 8px;
-    }
-
-    .bookmark-item:hover .bookmark-preview-container {
-      width: 110px;
-      opacity: 1;
-      pointer-events: none;
-    }
-
-    .bookmark-preview-container .preview-loading {
+      background: var(--md-sys-color-surface-variant);
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    .bookmark-item:hover .bookmark-preview-container {
+      width: 150px;
+    }
+
+    .bookmark-preview-container .preview-loading {
+      width: 100%;
       height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: var(--md-sys-color-on-surface-variant);
       font-size: 11px;
-      padding: 8px;
-      text-align: center;
       pointer-events: none;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
 
     .bookmark-preview-container .preview-image {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
     }
 
     .bookmark-preview-container .preview-image.loaded {
-      display: block;
+      opacity: 1;
     }
 
     /* Folder Styles */

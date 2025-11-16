@@ -502,11 +502,10 @@ function createBookmarkElement(bookmark) {
 
 // Get preview URL for a bookmark
 function getPreviewUrl(url) {
-  // Using screenshot service
+  // Using WordPress mshots service (same as React webapp)
   try {
     const encodedUrl = encodeURIComponent(url);
-    // Using screenshotapi.net with demo token - change width to 200 for smaller sidebar preview
-    return `https://shot.screenshotapi.net/screenshot?token=DEMO&url=${encodedUrl}&width=200&output=image&file_type=png&wait_for_event=load`;
+    return `https://s.wordpress.com/mshots/v1/${encodedUrl}?w=320&h=180`;
   } catch (error) {
     console.error('Error generating preview URL:', error);
     return '';
