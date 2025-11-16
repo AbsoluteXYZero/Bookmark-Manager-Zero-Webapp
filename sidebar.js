@@ -96,13 +96,17 @@ function getMockBookmarks() {
           id: '2',
           title: 'GitHub',
           url: 'https://github.com',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         },
         {
           id: '3',
           title: 'Stack Overflow',
           url: 'https://stackoverflow.com',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         }
       ]
     },
@@ -115,25 +119,33 @@ function getMockBookmarks() {
           id: '5',
           title: 'MDN Web Docs',
           url: 'https://developer.mozilla.org',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         },
         {
           id: '6',
           title: 'CSS Tricks',
           url: 'https://css-tricks.com',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         },
         {
           id: '7',
           title: 'Can I Use',
           url: 'https://caniuse.com',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         },
         {
           id: '8',
           title: 'JavaScript Info',
           url: 'https://javascript.info',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         }
       ]
     },
@@ -146,13 +158,17 @@ function getMockBookmarks() {
           id: '10',
           title: 'Hacker News',
           url: 'https://news.ycombinator.com',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         },
         {
           id: '11',
           title: 'The Verge',
           url: 'https://theverge.com',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         }
       ]
     },
@@ -165,39 +181,51 @@ function getMockBookmarks() {
           id: '13',
           title: 'Dribbble',
           url: 'https://dribbble.com',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         },
         {
           id: '14',
           title: 'Figma',
           url: 'https://figma.com',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         },
         {
           id: '15',
           title: 'Material Design',
           url: 'https://material.io',
-          type: 'bookmark'
+          type: 'bookmark',
+          linkStatus: 'live',
+          safetyStatus: 'safe'
         }
       ]
     },
     {
       id: '16',
-      title: 'YouTube',
-      url: 'https://youtube.com',
-      type: 'bookmark'
+      title: 'Suspicious Site Example',
+      url: 'https://suspicious-example.com',
+      type: 'bookmark',
+      linkStatus: 'live',
+      safetyStatus: 'warning'
     },
     {
       id: '17',
-      title: 'Reddit',
-      url: 'https://reddit.com',
-      type: 'bookmark'
+      title: 'Dead Link Example',
+      url: 'https://dead-link-example-404.com',
+      type: 'bookmark',
+      linkStatus: 'dead',
+      safetyStatus: 'unknown'
     },
     {
       id: '18',
-      title: 'Twitter',
-      url: 'https://twitter.com',
-      type: 'bookmark'
+      title: 'Malicious Site Example',
+      url: 'https://dangerous-example.com',
+      type: 'bookmark',
+      linkStatus: 'live',
+      safetyStatus: 'unsafe'
     }
   ];
 }
@@ -229,6 +257,57 @@ function renderNodes(nodes, container) {
       container.appendChild(createBookmarkElement(node));
     }
   });
+}
+
+// Get status dot HTML based on link status
+function getStatusDotHtml(linkStatus) {
+  const statusMap = {
+    'live': { class: 'status-dot-green', title: 'Link is live and accessible' },
+    'dead': { class: 'status-dot-red', title: 'Link is dead or unreachable' },
+    'parked': { class: 'status-dot-yellow', title: 'Domain is parked' },
+    'checking': { class: 'status-dot-gray', title: 'Checking link status...' },
+    'unknown': { class: 'status-dot-gray', title: 'Status unknown' }
+  };
+
+  const status = statusMap[linkStatus] || statusMap['unknown'];
+  return `<span class="status-dot ${status.class}" title="${status.title}">●</span>`;
+}
+
+// Get shield indicator HTML based on safety status
+function getShieldHtml(safetyStatus) {
+  const shieldSvgs = {
+    'safe': `
+      <span class="shield-indicator shield-safe" title="Safe - No threats detected by VirusTotal">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.18L16.59,7.59L18,9L10,17Z"/>
+        </svg>
+      </span>
+    `,
+    'warning': `
+      <span class="shield-indicator shield-warning" title="Suspicious - Some security vendors flagged this URL">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M13,7H11V13H13V7M13,17H11V15H13V17Z"/>
+        </svg>
+      </span>
+    `,
+    'unsafe': `
+      <span class="shield-indicator shield-unsafe" title="Malicious - Multiple threats detected! DO NOT VISIT">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.1,7 14,7.9 14,9V10.5L15.5,10.5C16.3,10.5 17,11.2 17,12V16C17,16.8 16.3,17.5 15.5,17.5H8.5C7.7,17.5 7,16.8 7,16V12C7,11.2 7.7,10.5 8.5,10.5H10V9C10,7.9 10.9,7 12,7M12,8.2C11.2,8.2 10.8,8.7 10.8,9V10.5H13.2V9C13.2,8.7 12.8,8.2 12,8.2Z"/>
+        </svg>
+      </span>
+    `,
+    'checking': `
+      <span class="shield-indicator shield-scanning" title="Scanning with VirusTotal...">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z"/>
+        </svg>
+      </span>
+    `,
+    'unknown': ''
+  };
+
+  return shieldSvgs[safetyStatus] || '';
 }
 
 // Create folder element
@@ -274,12 +353,18 @@ function createBookmarkElement(bookmark) {
   bookmarkDiv.dataset.id = bookmark.id;
   bookmarkDiv.draggable = true;
 
-  // Get favicon
-  const faviconUrl = getFaviconUrl(bookmark.url);
+  // Get link status (default to unknown)
+  const linkStatus = bookmark.linkStatus || 'unknown';
+  const safetyStatus = bookmark.safetyStatus || 'unknown';
+
+  // Build status indicators HTML
+  const statusDotHtml = getStatusDotHtml(linkStatus);
+  const shieldHtml = getShieldHtml(safetyStatus);
 
   bookmarkDiv.innerHTML = `
     <div class="status-indicators">
-      <span class="status-dot status-dot-gray" title="Status unknown">●</span>
+      ${statusDotHtml}
+      ${shieldHtml}
     </div>
     <div class="bookmark-info">
       <div class="bookmark-title">${escapeHtml(bookmark.title || bookmark.url)}</div>
@@ -298,6 +383,14 @@ function createBookmarkElement(bookmark) {
       <button class="action-btn" data-action="edit">
         <span class="icon">✏️</span>
         <span>Edit</span>
+      </button>
+      <button class="action-btn" data-action="recheck">
+        <span class="icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </span>
+        <span>Recheck Status</span>
       </button>
       <button class="action-btn danger" data-action="delete">
         <span class="icon">🗑️</span>
@@ -380,6 +473,108 @@ function closeAllMenus() {
   settingsMenu.classList.remove('show');
 }
 
+// Check link status using background script
+async function checkLinkStatus(url) {
+  if (isPreviewMode) {
+    // Simulate checking in preview mode
+    return new Promise(resolve => {
+      setTimeout(() => {
+        // Random status for demo
+        const statuses = ['live', 'live', 'live', 'dead'];
+        resolve(statuses[Math.floor(Math.random() * statuses.length)]);
+      }, 500);
+    });
+  }
+
+  try {
+    const response = await browser.runtime.sendMessage({
+      action: 'checkLinkStatus',
+      url: url
+    });
+    return response.status || 'unknown';
+  } catch (error) {
+    console.error('Error checking link status:', error);
+    return 'unknown';
+  }
+}
+
+// Check URL safety with VirusTotal (placeholder - requires API key configuration)
+async function checkSafetyStatus(url) {
+  if (isPreviewMode) {
+    // Simulate checking in preview mode
+    return new Promise(resolve => {
+      setTimeout(() => {
+        // Mostly safe, some warnings, rare unsafe for demo
+        const statuses = ['safe', 'safe', 'safe', 'safe', 'warning', 'unsafe'];
+        resolve(statuses[Math.floor(Math.random() * statuses.length)]);
+      }, 800);
+    });
+  }
+
+  // In real extension, this would call VirusTotal API via background script
+  // For now, return unknown until VirusTotal API key is configured
+  return 'unknown';
+}
+
+// Recheck bookmark status (link + safety)
+async function recheckBookmarkStatus(bookmarkId) {
+  // Find the bookmark in the tree
+  const bookmark = findBookmarkById(bookmarkTree, bookmarkId);
+  if (!bookmark || !bookmark.url) return;
+
+  if (isPreviewMode) {
+    alert('🔄 Rechecking bookmark status...\n\nIn the real extension, this would check:\n• Link status (live/dead/parked)\n• VirusTotal safety scan');
+  }
+
+  // Update bookmark to show checking status
+  updateBookmarkInTree(bookmarkId, {
+    linkStatus: 'checking',
+    safetyStatus: 'checking'
+  });
+  renderBookmarks();
+
+  // Perform checks
+  const [linkStatus, safetyStatus] = await Promise.all([
+    checkLinkStatus(bookmark.url),
+    checkSafetyStatus(bookmark.url)
+  ]);
+
+  // Update bookmark with results
+  updateBookmarkInTree(bookmarkId, {
+    linkStatus,
+    safetyStatus
+  });
+  renderBookmarks();
+}
+
+// Find bookmark by ID in tree
+function findBookmarkById(nodes, id) {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    if (node.type === 'folder' && node.children) {
+      const found = findBookmarkById(node.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+// Update bookmark in tree
+function updateBookmarkInTree(bookmarkId, updates) {
+  const updateNode = (nodes) => {
+    return nodes.map(node => {
+      if (node.id === bookmarkId) {
+        return { ...node, ...updates };
+      }
+      if (node.type === 'folder' && node.children) {
+        return { ...node, children: updateNode(node.children) };
+      }
+      return node;
+    });
+  };
+  bookmarkTree = updateNode(bookmarkTree);
+}
+
 // Handle bookmark actions
 async function handleBookmarkAction(action, bookmark) {
   switch (action) {
@@ -393,6 +588,10 @@ async function handleBookmarkAction(action, bookmark) {
 
     case 'edit':
       editBookmark(bookmark);
+      break;
+
+    case 'recheck':
+      await recheckBookmarkStatus(bookmark.id);
       break;
 
     case 'delete':
@@ -523,9 +722,23 @@ function matchesSearch(bookmark) {
 function matchesFilter(bookmark) {
   if (!activeFilter) return true;
 
-  // For now, no filtering implemented
-  // This is where you'd check link status, safety, etc.
-  return true;
+  const linkStatus = bookmark.linkStatus || 'unknown';
+  const safetyStatus = bookmark.safetyStatus || 'unknown';
+
+  switch (activeFilter) {
+    case 'live':
+      return linkStatus === 'live';
+    case 'dead':
+      return linkStatus === 'dead' || linkStatus === 'parked';
+    case 'safe':
+      return safetyStatus === 'safe';
+    case 'suspicious':
+      return safetyStatus === 'warning';
+    case 'unsafe':
+      return safetyStatus === 'unsafe';
+    default:
+      return true;
+  }
 }
 
 // Count bookmarks in folder
