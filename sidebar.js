@@ -304,10 +304,16 @@ function getShieldHtml(safetyStatus) {
         </svg>
       </span>
     `,
-    'unknown': ''
+    'unknown': `
+      <span class="shield-indicator shield-unknown" title="Unable to scan - Link unreachable or not yet checked">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12.5,7V12.5H11V7H12.5M12.5,14V15.5H11V14H12.5Z"/>
+        </svg>
+      </span>
+    `
   };
 
-  return shieldSvgs[safetyStatus] || '';
+  return shieldSvgs[safetyStatus] || shieldSvgs['unknown'];
 }
 
 // Create folder element
