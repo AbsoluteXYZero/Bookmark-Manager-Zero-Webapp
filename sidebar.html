@@ -451,7 +451,7 @@
     /* Bookmark Preview Styles - Based on React webapp */
     .bookmark-preview-container {
       flex-shrink: 0;
-      width: 0;
+      width: 0 !important;
       align-self: stretch;
       transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
@@ -468,7 +468,7 @@
     }
 
     .bookmark-item:hover .bookmark-preview-container {
-      width: 150px;
+      width: 150px !important;
     }
 
     .bookmark-preview-container .preview-loading {
@@ -689,7 +689,7 @@
       <div class="logo-icon">🔖</div>
       <div class="logo-text">
         <div class="logo-title">Bookmark Manager</div>
-        <div class="logo-subtitle">Firefox Edition</div>
+        <div class="logo-subtitle">Firefox Edition v2.0</div>
       </div>
     </div>
 
