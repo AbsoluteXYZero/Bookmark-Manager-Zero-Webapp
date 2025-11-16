@@ -403,10 +403,6 @@ function createBookmarkElement(bookmark) {
         <span>Delete</span>
       </button>
     </div>
-    <div class="bookmark-preview">
-      <div class="preview-loading">Loading preview...</div>
-      <img class="preview-image" alt="Preview" />
-    </div>
   `;
 
   // Add click handler for bookmark (open in current tab)
@@ -446,9 +442,6 @@ function createBookmarkElement(bookmark) {
 
   // Preview hover handlers
   let previewTimeout = null;
-  const previewContainer = bookmarkDiv.querySelector('.bookmark-preview');
-  const previewImage = bookmarkDiv.querySelector('.preview-image');
-  const previewLoading = bookmarkDiv.querySelector('.preview-loading');
 
   bookmarkDiv.addEventListener('mouseenter', (e) => {
     if (e.target.closest('.bookmark-actions') || e.target.closest('.bookmark-menu-btn')) {
@@ -456,13 +449,13 @@ function createBookmarkElement(bookmark) {
     }
 
     previewTimeout = setTimeout(() => {
-      showPreview(bookmark.url, previewContainer, previewImage, previewLoading, bookmarkDiv);
+      showPreview(bookmark.url, bookmarkDiv);
     }, 500); // 500ms delay before showing
   });
 
   bookmarkDiv.addEventListener('mouseleave', () => {
     clearTimeout(previewTimeout);
-    hidePreview(previewContainer);
+    hidePreview();
   });
 
   return bookmarkDiv;
@@ -481,29 +474,24 @@ function getPreviewUrl(url) {
 }
 
 // Show bookmark preview
-function showPreview(url, container, image, loading, bookmarkElement) {
+function showPreview(url, bookmarkElement) {
+  const container = document.getElementById('bookmarkPreview');
+  const image = container.querySelector('.preview-image');
+  const loading = container.querySelector('.preview-loading');
+
+  if (!container) return;
+
   // Position the preview relative to the bookmark item
   const rect = bookmarkElement.getBoundingClientRect();
-  const sidebarRect = document.body.getBoundingClientRect();
 
-  // Position to the right of the bookmark, aligned with its top
+  // Position to the right of the sidebar, aligned with the bookmark's top
   container.style.top = `${rect.top}px`;
-
-  // Check if there's enough space on the right
-  const spaceOnRight = window.innerWidth - rect.right;
-  if (spaceOnRight > 420) {
-    // Show on the right
-    container.style.left = `${rect.right + 10}px`;
-    container.style.right = 'auto';
-  } else {
-    // Show on the left if not enough space on right
-    container.style.right = `${window.innerWidth - rect.left + 10}px`;
-    container.style.left = 'auto';
-  }
+  container.style.left = `${rect.right + 10}px`;
 
   container.classList.add('show');
   loading.style.display = 'block';
   image.style.display = 'none';
+  loading.textContent = 'Loading preview...';
 
   const previewUrl = getPreviewUrl(url);
   if (!previewUrl) {
@@ -527,8 +515,11 @@ function showPreview(url, container, image, loading, bookmarkElement) {
 }
 
 // Hide bookmark preview
-function hidePreview(container) {
-  container.classList.remove('show');
+function hidePreview() {
+  const container = document.getElementById('bookmarkPreview');
+  if (container) {
+    container.classList.remove('show');
+  }
 }
 
 // Toggle folder expanded state

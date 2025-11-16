@@ -449,44 +449,45 @@
     }
 
     /* Bookmark Preview Styles */
-    .bookmark-preview {
+    #bookmarkPreview {
       position: fixed;
-      background: var(--md-sys-color-surface);
-      border: 1px solid var(--md-sys-color-outline);
+      background: var(--md-sys-color-surface-container);
+      border: 2px solid var(--md-sys-color-primary);
       border-radius: 12px;
-      box-shadow: var(--md-elevation-3);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
       padding: 12px;
       width: 400px;
       max-width: 400px;
       opacity: 0;
       visibility: hidden;
-      transform: translateX(20px) scale(0.95);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 10001;
+      transform: translateX(-10px) scale(0.98);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100000;
       pointer-events: none;
-      backdrop-filter: blur(8px);
-      background: var(--md-sys-color-surface-container);
     }
 
-    .bookmark-preview.show {
+    #bookmarkPreview.show {
       opacity: 1;
       visibility: visible;
       transform: translateX(0) scale(1);
     }
 
-    .preview-loading {
+    #bookmarkPreview .preview-loading {
       text-align: center;
       padding: 60px 20px;
       color: var(--md-sys-color-on-surface-variant);
       font-size: 13px;
+      font-weight: 500;
     }
 
-    .preview-image {
+    #bookmarkPreview .preview-image {
       width: 100%;
       height: auto;
       border-radius: 8px;
       display: none;
       box-shadow: var(--md-elevation-2);
+      max-height: 300px;
+      object-fit: cover;
     }
 
     /* Folder Styles */
@@ -747,6 +748,12 @@
       <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">🔖</div>
       <div style="font-size: 14px;">Loading bookmarks...</div>
     </div>
+  </div>
+
+  <!-- Shared bookmark preview container -->
+  <div id="bookmarkPreview" class="bookmark-preview">
+    <div class="preview-loading">Loading preview...</div>
+    <img class="preview-image" alt="Preview" />
   </div>
 
   <script src="sidebar.js"></script>
