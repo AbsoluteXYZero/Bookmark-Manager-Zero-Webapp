@@ -449,25 +449,20 @@
     }
 
     /* Bookmark Preview Styles - Based on React webapp */
-    /* TEMPORARY DEBUG: Making always visible with bright color */
     .bookmark-preview-container {
       flex-shrink: 0;
-      width: 150px !important;  /* TEMP: Always visible for debugging */
-      height: 85px;  /* Fixed height to match bookmark item */
+      width: 0;
+      height: 100%;
       transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: visible !important;  /* TEMP: Don't hide content */
+      overflow: hidden;
       pointer-events: none;
       user-select: none;
-      background: #ff00ff !important;  /* TEMP: Bright magenta for debugging */
+      background: var(--md-sys-color-surface-container-low);
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 3px solid #00ff00 !important;  /* TEMP: Bright green border */
-    }
-
-    .dark .bookmark-preview-container {
-      background: #ff00ff !important;  /* TEMP: Same bright color in dark mode */
+      border-radius: 8px;
     }
 
     .bookmark-item:hover .bookmark-preview-container {
