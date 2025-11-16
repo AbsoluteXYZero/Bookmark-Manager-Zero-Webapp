@@ -520,6 +520,7 @@
       align-items: center;
       gap: 10px;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
     }
 
     .folder-header:hover {
@@ -714,6 +715,126 @@
     .settings-btn-wrapper {
       position: relative;
     }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.hidden {
+      display: none;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+      position: relative;
+      background: var(--md-sys-color-surface);
+      border-radius: 16px;
+      box-shadow: var(--md-elevation-3);
+      max-width: 500px;
+      width: calc(100% - 40px);
+      max-height: 80vh;
+      overflow: auto;
+      z-index: 1;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: var(--md-sys-color-on-surface-variant);
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover {
+      background: var(--md-sys-color-surface-container-high);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 8px;
+      color: var(--md-sys-color-on-surface);
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--md-sys-color-primary);
+      background: var(--md-sys-color-surface-container-high);
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding: 16px 24px;
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+    }
   </style>
 </head>
 <body class="dark">
@@ -830,6 +951,39 @@
     </div>
   </div>
 
-  <script src="sidebar.js?v=7"></script>
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="editModalTitle">Edit Bookmark</h3>
+        <button class="modal-close" id="editModalClose">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editTitle">Title:</label>
+          <input type="text" id="editTitle" class="form-input">
+        </div>
+        <div class="form-group" id="editUrlGroup">
+          <label for="editUrl">URL:</label>
+          <input type="text" id="editUrl" class="form-input">
+        </div>
+        <div class="form-group" id="editKeywordsGroup">
+          <label for="editKeywords">Keywords:</label>
+          <input type="text" id="editKeywords" class="form-input" placeholder="e.g., shortcut keyword">
+        </div>
+        <div class="form-group" id="editTagsGroup">
+          <label for="editTags">Tags:</label>
+          <input type="text" id="editTags" class="form-input" placeholder="Comma-separated tags">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="editModalCancel">Cancel</button>
+        <button class="btn btn-primary" id="editModalSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidebar.js?v=8"></script>
 </body>
 </html>

@@ -16,6 +16,7 @@ let displayOptions = {
   keywords: true,
   tags: true
 };
+let currentEditItem = null;
 
 // DOM Elements
 const bookmarkList = document.getElementById('bookmarkList');
@@ -360,13 +361,49 @@ function createFolderElement(folder) {
         <div class="folder-count">${childCount}</div>
       </div>
       <div class="folder-title">${escapeHtml(folder.title || 'Unnamed Folder')}</div>
+      <button class="bookmark-menu-btn folder-menu-btn">⋮</button>
+      <div class="bookmark-actions">
+        <button class="action-btn" data-action="rename">
+          <span class="icon">✏️</span>
+          <span>Rename</span>
+        </button>
+        <button class="action-btn danger" data-action="delete">
+          <span class="icon">🗑️</span>
+          <span>Delete</span>
+        </button>
+      </div>
     </div>
     <div class="folder-children ${isExpanded ? 'show' : ''}" style="border-left: 2px solid #818cf8 !important;"></div>
   `;
 
   // Add click handler for folder toggle
   const header = folderDiv.querySelector('.folder-header');
-  header.addEventListener('click', () => toggleFolder(folder.id, folderDiv));
+  const menuBtn = header.querySelector('.folder-menu-btn');
+  const actionsMenu = header.querySelector('.bookmark-actions');
+
+  header.addEventListener('click', (e) => {
+    // Don't toggle if clicking menu button or menu items
+    if (e.target.closest('.folder-menu-btn') || e.target.closest('.bookmark-actions')) {
+      return;
+    }
+    toggleFolder(folder.id, folderDiv);
+  });
+
+  // Add menu button handler
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleFolderMenu(folderDiv);
+  });
+
+  // Add action button handlers
+  actionsMenu.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      await handleFolderAction(action, folder);
+      closeAllMenus();
+    });
+  });
 
   // Render children if expanded
   if (isExpanded && folder.children) {
@@ -582,6 +619,52 @@ function toggleBookmarkMenu(bookmarkDiv) {
   }
 }
 
+// Toggle folder menu
+function toggleFolderMenu(folderDiv) {
+  const menu = folderDiv.querySelector('.bookmark-actions');
+  const isOpen = menu.classList.contains('show');
+
+  // Close all other menus
+  closeAllMenus();
+
+  // Toggle this menu
+  if (!isOpen) {
+    menu.classList.add('show');
+  }
+}
+
+// Handle folder actions
+async function handleFolderAction(action, folder) {
+  switch (action) {
+    case 'rename':
+      openEditModal(folder, true);
+      break;
+
+    case 'delete':
+      if (confirm(`Delete folder "${folder.title}" and all its contents?`)) {
+        await deleteFolder(folder.id);
+      }
+      break;
+  }
+}
+
+// Delete folder
+async function deleteFolder(id) {
+  if (isPreviewMode) {
+    alert('✓ In preview mode. In the real extension, this would delete the folder.');
+    return;
+  }
+
+  try {
+    await browser.bookmarks.removeTree(id);
+    await loadBookmarks();
+    renderBookmarks();
+  } catch (error) {
+    console.error('Error deleting folder:', error);
+    alert('Failed to delete folder');
+  }
+}
+
 // Close all open menus
 function closeAllMenus() {
   document.querySelectorAll('.bookmark-actions.show').forEach(menu => {
@@ -719,24 +802,91 @@ async function handleBookmarkAction(action, bookmark) {
   }
 }
 
-// Edit bookmark
-async function editBookmark(bookmark) {
-  const newTitle = prompt('Edit title:', bookmark.title);
-  if (newTitle !== null && newTitle !== bookmark.title) {
-    if (isPreviewMode) {
-      alert('✓ In preview mode. In the real extension, this would update the bookmark.');
-      return;
-    }
+// Open edit modal
+function openEditModal(item, isFolder = false) {
+  currentEditItem = item;
 
-    try {
-      await browser.bookmarks.update(bookmark.id, { title: newTitle });
-      await loadBookmarks();
-      renderBookmarks();
-    } catch (error) {
-      console.error('Error updating bookmark:', error);
-      alert('Failed to update bookmark');
-    }
+  const modal = document.getElementById('editModal');
+  const modalTitle = document.getElementById('editModalTitle');
+  const editTitle = document.getElementById('editTitle');
+  const editUrl = document.getElementById('editUrl');
+  const editKeywords = document.getElementById('editKeywords');
+  const editTags = document.getElementById('editTags');
+  const editUrlGroup = document.getElementById('editUrlGroup');
+  const editKeywordsGroup = document.getElementById('editKeywordsGroup');
+  const editTagsGroup = document.getElementById('editTagsGroup');
+
+  // Set modal title
+  modalTitle.textContent = isFolder ? 'Rename Folder' : 'Edit Bookmark';
+
+  // Populate fields
+  editTitle.value = item.title || '';
+
+  if (isFolder) {
+    // Hide bookmark-specific fields for folders
+    editUrlGroup.style.display = 'none';
+    editKeywordsGroup.style.display = 'none';
+    editTagsGroup.style.display = 'none';
+  } else {
+    // Show all fields for bookmarks
+    editUrlGroup.style.display = 'block';
+    editKeywordsGroup.style.display = 'block';
+    editTagsGroup.style.display = 'block';
+
+    editUrl.value = item.url || '';
+    editKeywords.value = item.keyword || '';
+    editTags.value = item.tags ? item.tags.join(', ') : '';
   }
+
+  modal.classList.remove('hidden');
+  editTitle.focus();
+}
+
+// Close edit modal
+function closeEditModal() {
+  const modal = document.getElementById('editModal');
+  modal.classList.add('hidden');
+  currentEditItem = null;
+}
+
+// Save edit modal
+async function saveEditModal() {
+  if (!currentEditItem) return;
+
+  const editTitle = document.getElementById('editTitle');
+  const editUrl = document.getElementById('editUrl');
+  const editKeywords = document.getElementById('editKeywords');
+  const editTags = document.getElementById('editTags');
+
+  const isFolder = !currentEditItem.url;
+  const updates = { title: editTitle.value };
+
+  if (!isFolder) {
+    updates.url = editUrl.value;
+    // Note: Firefox bookmarks API doesn't support keywords and tags directly
+    // These would need to be stored separately or as part of title/description
+  }
+
+  if (isPreviewMode) {
+    alert('✓ In preview mode. In the real extension, this would update the ' + (isFolder ? 'folder' : 'bookmark') + '.');
+    closeEditModal();
+    return;
+  }
+
+  try {
+    await browser.bookmarks.update(currentEditItem.id, updates);
+    await loadBookmarks();
+    renderBookmarks();
+    closeEditModal();
+  } catch (error) {
+    console.error('Error updating:', error);
+    alert('Failed to update ' + (isFolder ? 'folder' : 'bookmark'));
+  }
+}
+
+// Edit bookmark (legacy wrapper)
+async function editBookmark(bookmark) {
+  openEditModal(bookmark, false);
 }
 
 // Delete bookmark
@@ -1025,6 +1175,28 @@ function setupEventListeners() {
     if (!e.target.closest('.bookmark-actions') && !e.target.closest('.bookmark-menu-btn') &&
         !e.target.closest('.settings-menu') && !e.target.closest('#settingsBtn')) {
       closeAllMenus();
+    }
+  });
+
+  // Edit modal event listeners
+  const editModal = document.getElementById('editModal');
+  const editModalClose = document.getElementById('editModalClose');
+  const editModalCancel = document.getElementById('editModalCancel');
+  const editModalSave = document.getElementById('editModalSave');
+  const editModalOverlay = editModal.querySelector('.modal-overlay');
+
+  editModalClose.addEventListener('click', closeEditModal);
+  editModalCancel.addEventListener('click', closeEditModal);
+  editModalSave.addEventListener('click', saveEditModal);
+  editModalOverlay.addEventListener('click', closeEditModal);
+
+  // Allow Enter key to save in modal
+  editModal.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      saveEditModal();
+    } else if (e.key === 'Escape') {
+      closeEditModal();
     }
   });
 
