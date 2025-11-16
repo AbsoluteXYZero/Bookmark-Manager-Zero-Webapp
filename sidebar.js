@@ -1,6 +1,9 @@
 // Bookmark Manager Zero - Sidebar Script
 // Connects to Firefox native bookmarks API
 
+// Check if running in preview mode (no browser API available)
+const isPreviewMode = typeof browser === 'undefined';
+
 // State
 let bookmarkTree = [];
 let searchTerm = '';
@@ -29,6 +32,12 @@ async function init() {
 
 // Load theme preference
 function loadTheme() {
+  if (isPreviewMode) {
+    theme = 'dark';
+    applyTheme();
+    return;
+  }
+
   browser.storage.local.get('theme').then(result => {
     theme = result.theme || 'dark';
     applyTheme();
@@ -50,11 +59,20 @@ function applyTheme() {
 function toggleTheme() {
   theme = theme === 'light' ? 'dark' : 'light';
   applyTheme();
-  browser.storage.local.set({ theme });
+  if (!isPreviewMode) {
+    browser.storage.local.set({ theme });
+  }
 }
 
 // Load bookmarks from Firefox API
 async function loadBookmarks() {
+  if (isPreviewMode) {
+    // Use mock data for preview
+    bookmarkTree = getMockBookmarks();
+    console.log('Preview mode: Using mock bookmarks');
+    return;
+  }
+
   try {
     const tree = await browser.bookmarks.getTree();
     // Firefox returns root with children, we want the actual bookmark folders
@@ -64,6 +82,124 @@ async function loadBookmarks() {
     console.error('Error loading bookmarks:', error);
     showError('Failed to load bookmarks');
   }
+}
+
+// Mock bookmark data for preview mode
+function getMockBookmarks() {
+  return [
+    {
+      id: '1',
+      title: 'Bookmarks Toolbar',
+      type: 'folder',
+      children: [
+        {
+          id: '2',
+          title: 'GitHub',
+          url: 'https://github.com',
+          type: 'bookmark'
+        },
+        {
+          id: '3',
+          title: 'Stack Overflow',
+          url: 'https://stackoverflow.com',
+          type: 'bookmark'
+        }
+      ]
+    },
+    {
+      id: '4',
+      title: 'Development',
+      type: 'folder',
+      children: [
+        {
+          id: '5',
+          title: 'MDN Web Docs',
+          url: 'https://developer.mozilla.org',
+          type: 'bookmark'
+        },
+        {
+          id: '6',
+          title: 'CSS Tricks',
+          url: 'https://css-tricks.com',
+          type: 'bookmark'
+        },
+        {
+          id: '7',
+          title: 'Can I Use',
+          url: 'https://caniuse.com',
+          type: 'bookmark'
+        },
+        {
+          id: '8',
+          title: 'JavaScript Info',
+          url: 'https://javascript.info',
+          type: 'bookmark'
+        }
+      ]
+    },
+    {
+      id: '9',
+      title: 'News & Media',
+      type: 'folder',
+      children: [
+        {
+          id: '10',
+          title: 'Hacker News',
+          url: 'https://news.ycombinator.com',
+          type: 'bookmark'
+        },
+        {
+          id: '11',
+          title: 'The Verge',
+          url: 'https://theverge.com',
+          type: 'bookmark'
+        }
+      ]
+    },
+    {
+      id: '12',
+      title: 'Design Resources',
+      type: 'folder',
+      children: [
+        {
+          id: '13',
+          title: 'Dribbble',
+          url: 'https://dribbble.com',
+          type: 'bookmark'
+        },
+        {
+          id: '14',
+          title: 'Figma',
+          url: 'https://figma.com',
+          type: 'bookmark'
+        },
+        {
+          id: '15',
+          title: 'Material Design',
+          url: 'https://material.io',
+          type: 'bookmark'
+        }
+      ]
+    },
+    {
+      id: '16',
+      title: 'YouTube',
+      url: 'https://youtube.com',
+      type: 'bookmark'
+    },
+    {
+      id: '17',
+      title: 'Reddit',
+      url: 'https://reddit.com',
+      type: 'bookmark'
+    },
+    {
+      id: '18',
+      title: 'Twitter',
+      url: 'https://twitter.com',
+      type: 'bookmark'
+    }
+  ];
 }
 
 // Render bookmarks
@@ -271,6 +407,11 @@ async function handleBookmarkAction(action, bookmark) {
 async function editBookmark(bookmark) {
   const newTitle = prompt('Edit title:', bookmark.title);
   if (newTitle !== null && newTitle !== bookmark.title) {
+    if (isPreviewMode) {
+      alert('✓ In preview mode. In the real extension, this would update the bookmark.');
+      return;
+    }
+
     try {
       await browser.bookmarks.update(bookmark.id, { title: newTitle });
       await loadBookmarks();
@@ -284,6 +425,11 @@ async function editBookmark(bookmark) {
 
 // Delete bookmark
 async function deleteBookmark(id) {
+  if (isPreviewMode) {
+    alert('✓ In preview mode. In the real extension, this would delete the bookmark.');
+    return;
+  }
+
   try {
     await browser.bookmarks.remove(id);
     await loadBookmarks();
@@ -300,6 +446,11 @@ async function createNewBookmark() {
   if (!url) return;
 
   const title = prompt('Enter title (optional):') || url;
+
+  if (isPreviewMode) {
+    alert('✓ In preview mode. In the real extension, this would create a new bookmark.');
+    return;
+  }
 
   try {
     await browser.bookmarks.create({
@@ -318,6 +469,11 @@ async function createNewBookmark() {
 async function createNewFolder() {
   const title = prompt('Enter folder name:');
   if (!title) return;
+
+  if (isPreviewMode) {
+    alert('✓ In preview mode. In the real extension, this would create a new folder.');
+    return;
+  }
 
   try {
     await browser.bookmarks.create({
@@ -415,6 +571,11 @@ function showError(message) {
 
 // Switch sidebar side
 async function switchSidebarSide() {
+  if (isPreviewMode) {
+    alert('📍 In the Firefox extension, you can move the sidebar:\n\n1. Right-click the sidebar\n2. Select "Move Sidebar to Right/Left"\n\nOr use: View → Sidebar → Move Sidebar');
+    return;
+  }
+
   try {
     // Get current window
     const currentWindow = await browser.windows.getCurrent();
@@ -496,22 +657,24 @@ function setupEventListeners() {
     }
   });
 
-  // Listen for bookmark changes
-  browser.bookmarks.onCreated.addListener(() => {
-    loadBookmarks().then(renderBookmarks);
-  });
+  // Listen for bookmark changes (only in extension mode)
+  if (!isPreviewMode) {
+    browser.bookmarks.onCreated.addListener(() => {
+      loadBookmarks().then(renderBookmarks);
+    });
 
-  browser.bookmarks.onRemoved.addListener(() => {
-    loadBookmarks().then(renderBookmarks);
-  });
+    browser.bookmarks.onRemoved.addListener(() => {
+      loadBookmarks().then(renderBookmarks);
+    });
 
-  browser.bookmarks.onChanged.addListener(() => {
-    loadBookmarks().then(renderBookmarks);
-  });
+    browser.bookmarks.onChanged.addListener(() => {
+      loadBookmarks().then(renderBookmarks);
+    });
 
-  browser.bookmarks.onMoved.addListener(() => {
-    loadBookmarks().then(renderBookmarks);
-  });
+    browser.bookmarks.onMoved.addListener(() => {
+      loadBookmarks().then(renderBookmarks);
+    });
+  }
 }
 
 // Initialize when DOM is ready
