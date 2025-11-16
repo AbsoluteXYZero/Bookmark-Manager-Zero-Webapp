@@ -403,6 +403,10 @@ function createBookmarkElement(bookmark) {
         <span>Delete</span>
       </button>
     </div>
+    <div class="bookmark-preview">
+      <div class="preview-loading">Loading preview...</div>
+      <img class="preview-image" alt="Preview" />
+    </div>
   `;
 
   // Add click handler for bookmark (open in current tab)
@@ -440,7 +444,91 @@ function createBookmarkElement(bookmark) {
     bookmarkDiv.style.opacity = '1';
   });
 
+  // Preview hover handlers
+  let previewTimeout = null;
+  const previewContainer = bookmarkDiv.querySelector('.bookmark-preview');
+  const previewImage = bookmarkDiv.querySelector('.preview-image');
+  const previewLoading = bookmarkDiv.querySelector('.preview-loading');
+
+  bookmarkDiv.addEventListener('mouseenter', (e) => {
+    if (e.target.closest('.bookmark-actions') || e.target.closest('.bookmark-menu-btn')) {
+      return; // Don't show preview when hovering over menu
+    }
+
+    previewTimeout = setTimeout(() => {
+      showPreview(bookmark.url, previewContainer, previewImage, previewLoading, bookmarkDiv);
+    }, 500); // 500ms delay before showing
+  });
+
+  bookmarkDiv.addEventListener('mouseleave', () => {
+    clearTimeout(previewTimeout);
+    hidePreview(previewContainer);
+  });
+
   return bookmarkDiv;
+}
+
+// Get preview URL for a bookmark
+function getPreviewUrl(url) {
+  // Using thum.io free screenshot service
+  // Note: In production, you may want to use a paid service or self-hosted solution
+  try {
+    const encodedUrl = encodeURIComponent(url);
+    return `https://image.thum.io/get/width/400/crop/600/noanimate/${url}`;
+  } catch (error) {
+    return '';
+  }
+}
+
+// Show bookmark preview
+function showPreview(url, container, image, loading, bookmarkElement) {
+  // Position the preview relative to the bookmark item
+  const rect = bookmarkElement.getBoundingClientRect();
+  const sidebarRect = document.body.getBoundingClientRect();
+
+  // Position to the right of the bookmark, aligned with its top
+  container.style.top = `${rect.top}px`;
+
+  // Check if there's enough space on the right
+  const spaceOnRight = window.innerWidth - rect.right;
+  if (spaceOnRight > 420) {
+    // Show on the right
+    container.style.left = `${rect.right + 10}px`;
+    container.style.right = 'auto';
+  } else {
+    // Show on the left if not enough space on right
+    container.style.right = `${window.innerWidth - rect.left + 10}px`;
+    container.style.left = 'auto';
+  }
+
+  container.classList.add('show');
+  loading.style.display = 'block';
+  image.style.display = 'none';
+
+  const previewUrl = getPreviewUrl(url);
+  if (!previewUrl) {
+    loading.textContent = 'Preview unavailable';
+    return;
+  }
+
+  // Load the preview image
+  image.onload = () => {
+    loading.style.display = 'none';
+    image.style.display = 'block';
+  };
+
+  image.onerror = () => {
+    loading.style.display = 'block';
+    loading.textContent = 'Preview unavailable';
+    image.style.display = 'none';
+  };
+
+  image.src = previewUrl;
+}
+
+// Hide bookmark preview
+function hidePreview(container) {
+  container.classList.remove('show');
 }
 
 // Toggle folder expanded state

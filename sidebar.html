@@ -448,6 +448,47 @@
       height: 14px;
     }
 
+    /* Bookmark Preview Styles */
+    .bookmark-preview {
+      position: fixed;
+      background: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: 12px;
+      box-shadow: var(--md-elevation-3);
+      padding: 12px;
+      width: 400px;
+      max-width: 400px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(20px) scale(0.95);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 10001;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+      background: var(--md-sys-color-surface-container);
+    }
+
+    .bookmark-preview.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0) scale(1);
+    }
+
+    .preview-loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 13px;
+    }
+
+    .preview-image {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: none;
+      box-shadow: var(--md-elevation-2);
+    }
+
     /* Folder Styles */
     .folder-item {
       margin-bottom: 8px;
