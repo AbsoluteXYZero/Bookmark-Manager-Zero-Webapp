@@ -450,27 +450,25 @@
 
     /* Bookmark Preview Styles */
     .bookmark-preview-container {
-      position: absolute;
-      right: 55px;
-      top: 8px;
-      width: 120px;
-      height: 75px;
+      flex-shrink: 0;
+      width: 0;
+      height: 70px;
       background: var(--md-sys-color-surface);
       border: 2px solid var(--md-sys-color-primary);
       border-radius: 8px;
       overflow: hidden;
       opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 5;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: var(--md-elevation-3);
       pointer-events: none;
       user-select: none;
+      margin-left: auto;
+      margin-right: 8px;
     }
 
     .bookmark-item:hover .bookmark-preview-container {
+      width: 110px;
       opacity: 1;
-      visibility: visible;
       pointer-events: none;
     }
 
