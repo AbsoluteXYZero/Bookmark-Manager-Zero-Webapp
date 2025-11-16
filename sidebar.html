@@ -452,7 +452,7 @@
     .bookmark-preview-container {
       flex-shrink: 0;
       width: 0;
-      height: 100%;
+      align-self: stretch;
       transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       overflow: hidden;
       pointer-events: none;
@@ -463,6 +463,8 @@
       align-items: center;
       justify-content: center;
       border-radius: 8px;
+      margin: -10px 0;
+      margin-right: -12px;
     }
 
     .bookmark-item:hover .bookmark-preview-container {
