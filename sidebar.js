@@ -28,7 +28,7 @@ async function init() {
   const logoTitle = document.querySelector('.logo-title');
   const logoSubtitle = document.querySelector('.logo-subtitle');
   if (logoTitle) logoTitle.textContent = 'Bookmark Manager Zero';
-  if (logoSubtitle) logoSubtitle.textContent = 'Firefox Edition';
+  if (logoSubtitle) logoSubtitle.textContent = 'Firefox Edition [v' + Date.now() + ']';
 
   loadTheme();
   await loadBookmarks();
