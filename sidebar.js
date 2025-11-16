@@ -336,7 +336,7 @@ function createFolderElement(folder) {
       </div>
       <div class="folder-title">${escapeHtml(folder.title || 'Unnamed Folder')}</div>
     </div>
-    <div class="folder-children ${isExpanded ? 'show' : ''}"></div>
+    <div class="folder-children ${isExpanded ? 'show' : ''}" style="border-left: 2px solid #818cf8 !important;"></div>
   `;
 
   // Add click handler for folder toggle
