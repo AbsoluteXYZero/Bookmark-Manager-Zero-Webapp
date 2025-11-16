@@ -403,6 +403,10 @@ function createBookmarkElement(bookmark) {
         <span>Delete</span>
       </button>
     </div>
+    <div class="bookmark-preview-container">
+      <div class="preview-loading">Loading...</div>
+      <img class="preview-image" alt="Preview" data-url="${escapeHtml(bookmark.url)}" />
+    </div>
   `;
 
   // Add click handler for bookmark (open in current tab)
@@ -440,25 +444,32 @@ function createBookmarkElement(bookmark) {
     bookmarkDiv.style.opacity = '1';
   });
 
-  // Preview hover handlers
-  let previewTimeout = null;
+  // Preview hover handler - load image on first hover
+  const previewImage = bookmarkDiv.querySelector('.preview-image');
+  const previewLoading = bookmarkDiv.querySelector('.preview-loading');
+  let previewLoaded = false;
 
-  bookmarkDiv.addEventListener('mouseenter', (e) => {
-    if (e.target.closest('.bookmark-actions') || e.target.closest('.bookmark-menu-btn')) {
-      return; // Don't show preview when hovering over menu
+  bookmarkDiv.addEventListener('mouseenter', () => {
+    if (!previewLoaded && bookmark.url) {
+      const previewUrl = getPreviewUrl(bookmark.url);
+
+      if (previewUrl) {
+        previewImage.onload = () => {
+          previewLoading.style.display = 'none';
+          previewImage.classList.add('loaded');
+          previewLoaded = true;
+        };
+
+        previewImage.onerror = () => {
+          previewLoading.textContent = 'No preview';
+          previewLoaded = true; // Don't try again
+        };
+
+        previewImage.src = previewUrl;
+      } else {
+        previewLoading.textContent = 'No preview';
+      }
     }
-
-    console.log('Mouse entered bookmark:', bookmark.title);
-
-    previewTimeout = setTimeout(() => {
-      console.log('Triggering preview after delay');
-      showPreview(bookmark.url, bookmarkDiv);
-    }, 300); // Reduced to 300ms for faster response
-  });
-
-  bookmarkDiv.addEventListener('mouseleave', () => {
-    clearTimeout(previewTimeout);
-    hidePreview();
   });
 
   return bookmarkDiv;
@@ -466,90 +477,14 @@ function createBookmarkElement(bookmark) {
 
 // Get preview URL for a bookmark
 function getPreviewUrl(url) {
-  // Using multiple screenshot services with fallback
+  // Using screenshot service
   try {
     const encodedUrl = encodeURIComponent(url);
-
-    // Option 1: screenshotapi.net (more reliable, free tier available)
-    return `https://shot.screenshotapi.net/screenshot?token=DEMO&url=${encodedUrl}&width=400&output=image&file_type=png&wait_for_event=load`;
-
-    // Option 2: Alternative - api.apiflash.com (has free tier)
-    // return `https://api.apiflash.com/v1/urltoimage?access_key=DEMO&url=${encodedUrl}&width=400`;
-
-    // Option 3: thumbnail.ws (simple, no auth needed)
-    // return `https://api.thumbnail.ws/api/free/thumbnail/get?url=${encodedUrl}&width=400`;
+    // Using screenshotapi.net with demo token - change width to 200 for smaller sidebar preview
+    return `https://shot.screenshotapi.net/screenshot?token=DEMO&url=${encodedUrl}&width=200&output=image&file_type=png&wait_for_event=load`;
   } catch (error) {
     console.error('Error generating preview URL:', error);
     return '';
-  }
-}
-
-// Show bookmark preview
-function showPreview(url, bookmarkElement) {
-  const container = document.getElementById('bookmarkPreview');
-
-  if (!container) {
-    console.error('Preview container not found!');
-    return;
-  }
-
-  const image = container.querySelector('.preview-image');
-  const loading = container.querySelector('.preview-loading');
-
-  // Position the preview relative to the bookmark item
-  const rect = bookmarkElement.getBoundingClientRect();
-  const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-  console.log('Showing preview for:', url);
-  console.log('Bookmark position:', rect);
-  console.log('Scroll position:', scrollTop);
-
-  // Position to the right of the bookmark item
-  // Using absolute positioning, so we need to account for scroll
-  const topPos = rect.top + scrollTop;
-  const leftPos = rect.right + 10;
-
-  console.log('Preview will appear at:', { top: topPos, left: leftPos });
-
-  container.style.top = `${topPos}px`;
-  container.style.left = `${leftPos}px`;
-
-  container.classList.add('show');
-  loading.style.display = 'block';
-  image.style.display = 'none';
-  loading.textContent = 'Loading preview...';
-
-  const previewUrl = getPreviewUrl(url);
-  console.log('Preview URL:', previewUrl);
-
-  if (!previewUrl) {
-    loading.textContent = 'Preview unavailable';
-    console.error('Failed to generate preview URL');
-    return;
-  }
-
-  // Load the preview image
-  image.onload = () => {
-    console.log('Preview image loaded successfully');
-    loading.style.display = 'none';
-    image.style.display = 'block';
-  };
-
-  image.onerror = (e) => {
-    console.error('Preview image failed to load:', e);
-    loading.style.display = 'block';
-    loading.textContent = 'Preview unavailable';
-    image.style.display = 'none';
-  };
-
-  image.src = previewUrl;
-}
-
-// Hide bookmark preview
-function hidePreview() {
-  const container = document.getElementById('bookmarkPreview');
-  if (container) {
-    container.classList.remove('show');
   }
 }
 

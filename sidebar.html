@@ -449,46 +449,50 @@
     }
 
     /* Bookmark Preview Styles */
-    #bookmarkPreview {
+    .bookmark-preview-container {
       position: absolute;
-      background: var(--md-sys-color-surface-container);
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 160px;
+      height: 100px;
+      background: var(--md-sys-color-surface);
       border: 2px solid var(--md-sys-color-primary);
-      border-radius: 12px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-      padding: 12px;
-      width: 300px;
-      max-width: 300px;
+      border-radius: 8px;
+      overflow: hidden;
       opacity: 0;
       visibility: hidden;
-      transform: translateX(-10px) scale(0.98);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 100000;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      box-shadow: var(--md-elevation-3);
       pointer-events: none;
     }
 
-    #bookmarkPreview.show {
+    .bookmark-item:hover .bookmark-preview-container {
       opacity: 1;
       visibility: visible;
-      transform: translateX(0) scale(1);
-      pointer-events: auto;
     }
 
-    #bookmarkPreview .preview-loading {
-      text-align: center;
-      padding: 60px 20px;
+    .bookmark-preview-container .preview-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
       color: var(--md-sys-color-on-surface-variant);
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 11px;
+      padding: 8px;
+      text-align: center;
     }
 
-    #bookmarkPreview .preview-image {
+    .bookmark-preview-container .preview-image {
       width: 100%;
-      height: auto;
-      border-radius: 8px;
-      display: none;
-      box-shadow: var(--md-elevation-2);
-      max-height: 300px;
+      height: 100%;
       object-fit: cover;
+      display: none;
+    }
+
+    .bookmark-preview-container .preview-image.loaded {
+      display: block;
     }
 
     /* Folder Styles */
@@ -749,12 +753,6 @@
       <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">🔖</div>
       <div style="font-size: 14px;">Loading bookmarks...</div>
     </div>
-  </div>
-
-  <!-- Shared bookmark preview container -->
-  <div id="bookmarkPreview" class="bookmark-preview">
-    <div class="preview-loading">Loading preview...</div>
-    <img class="preview-image" alt="Preview" />
   </div>
 
   <script src="sidebar.js"></script>
