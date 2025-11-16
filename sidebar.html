@@ -451,11 +451,11 @@
     /* Bookmark Preview Styles */
     .bookmark-preview-container {
       position: absolute;
-      right: 8px;
+      right: 45px;
       top: 50%;
       transform: translateY(-50%);
-      width: 160px;
-      height: 100px;
+      width: 140px;
+      height: 90px;
       background: var(--md-sys-color-surface);
       border: 2px solid var(--md-sys-color-primary);
       border-radius: 8px;
@@ -463,7 +463,7 @@
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 100;
+      z-index: 10;
       box-shadow: var(--md-elevation-3);
       pointer-events: none;
     }
@@ -471,6 +471,7 @@
     .bookmark-item:hover .bookmark-preview-container {
       opacity: 1;
       visibility: visible;
+      pointer-events: none;
     }
 
     .bookmark-preview-container .preview-loading {

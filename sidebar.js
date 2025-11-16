@@ -445,9 +445,16 @@ function createBookmarkElement(bookmark) {
   });
 
   // Preview hover handler - load image on first hover
+  const previewContainer = bookmarkDiv.querySelector('.bookmark-preview-container');
   const previewImage = bookmarkDiv.querySelector('.preview-image');
   const previewLoading = bookmarkDiv.querySelector('.preview-loading');
   let previewLoaded = false;
+
+  // Prevent clicks on preview from opening bookmark (extra safety)
+  previewContainer.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+  });
 
   bookmarkDiv.addEventListener('mouseenter', () => {
     if (!previewLoaded && bookmark.url) {
