@@ -37,6 +37,7 @@ const settingsBtn = document.getElementById('settingsBtn');
 const settingsMenu = document.getElementById('settingsMenu');
 const openInTabBtn = document.getElementById('openInTabBtn');
 const switchSideBtn = document.getElementById('switchSideBtn');
+const closeExtensionBtn = document.getElementById('closeExtensionBtn');
 
 // Initialize
 async function init() {
@@ -1293,6 +1294,33 @@ async function switchSidebarSide() {
   }
 }
 
+// Close extension
+async function closeExtension() {
+  if (isPreviewMode) {
+    alert('✕ In the Firefox extension, this would close the sidebar or tab.');
+    return;
+  }
+
+  try {
+    // Check if we're running in a sidebar or a tab
+    const currentTab = await browser.tabs.getCurrent();
+
+    if (currentTab && currentTab.id) {
+      // We're in a tab, so close the tab
+      await browser.tabs.remove(currentTab.id);
+    } else {
+      // We're in a sidebar, use sidebarAction to close it
+      // Note: Firefox doesn't have a direct API to close sidebar programmatically
+      // We'll try to close the window, which works for sidebar panels
+      window.close();
+    }
+  } catch (error) {
+    console.error('Error closing extension:', error);
+    // Fallback: just try to close the window
+    window.close();
+  }
+}
+
 // Setup event listeners
 function setupEventListeners() {
   // Search
@@ -1423,6 +1451,12 @@ function setupEventListeners() {
   // Switch sidebar side
   switchSideBtn.addEventListener('click', () => {
     switchSidebarSide();
+    closeAllMenus();
+  });
+
+  // Close extension
+  closeExtensionBtn.addEventListener('click', () => {
+    closeExtension();
     closeAllMenus();
   });
 
