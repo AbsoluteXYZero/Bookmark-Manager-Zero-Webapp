@@ -158,102 +158,103 @@ const checkLinkStatus = async (url) => {
   }
 };
 
-// Check URL safety using Google Safe Browsing Lookup API
+// Check URL safety by scraping VirusTotal
+// WARNING: For personal use only. May violate VirusTotal ToS if distributed.
 const checkURLSafety = async (url) => {
   try {
-    // Google Safe Browsing Lookup API (v4)
-    // This is a simplified client-side check without API key
-    // For production, consider adding an API key for higher rate limits
-    const apiUrl = 'https://safebrowsing.googleapis.com/v4/threatMatches:find?key=';
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
 
-    // Fallback: Use a simpler heuristic-based check
-    // Check URL patterns that are commonly associated with threats
-    const suspiciousPatterns = [
-      /bit\.ly\//i,        // bit.ly URL shortener
-      /tinyurl\.com/i,     // TinyURL shortener
-      /goo\.gl/i,          // Google shortener
-      /t\.co\//i,          // Twitter shortener
-      /ow\.ly/i,           // Owly shortener
-      /\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/,  // IP addresses instead of domain names
+    // Quick check: Known safe domains - skip VirusTotal
+    const safeDomains = [
+      'google.com', 'youtube.com', 'github.com', 'stackoverflow.com',
+      'wikipedia.org', 'mozilla.org', 'firefox.com', 'microsoft.com',
+      'apple.com', 'amazon.com', 'reddit.com', 'twitter.com', 'facebook.com',
+      'instagram.com', 'linkedin.com', 'netflix.com', 'adobe.com',
+      'dropbox.com', 'wordpress.com', 'blogspot.com', 'medium.com',
+      'npmjs.com', 'cloudflare.com', 'jsdelivr.com', 'cdnjs.com'
     ];
 
-    // Parse URL
-    let hostname;
-    try {
-      const urlObj = new URL(url);
-      hostname = urlObj.hostname.toLowerCase();
-
-      // Common safe domains (whitelist) - check FIRST
-      const safeDomains = [
-        'google.com', 'youtube.com', 'github.com', 'stackoverflow.com',
-        'wikipedia.org', 'mozilla.org', 'firefox.com', 'microsoft.com',
-        'apple.com', 'amazon.com', 'reddit.com', 'twitter.com', 'facebook.com',
-        'instagram.com', 'linkedin.com', 'netflix.com', 'adobe.com',
-        'dropbox.com', 'wordpress.com', 'blogspot.com', 'medium.com',
-        'npmjs.com', 'cloudflare.com', 'jsdelivr.com', 'cdnjs.com'
-      ];
-
-      if (safeDomains.some(domain => hostname.endsWith(domain))) {
-        return 'safe';
-      }
-
-      // Known malicious/untrusted domain patterns (blacklist)
-      // These are commonly used in phishing, malware, and scam campaigns
-      const untrustedPatterns = [
-        // Fake login pages
-        /.*-login\..*/,
-        /.*account-verification\..*/,
-        /.*secure-update\..*/,
-        /.*verify-account\..*/,
-        // Suspicious TLDs commonly used in phishing
-        /\.xyz$/,
-        /\.top$/,
-        /\.loan$/,
-        /\.download$/,
-        /\.link$/,
-        /\.click$/,
-        /\.review$/,
-        /\.tk$/,
-        /\.ml$/,
-        /\.ga$/,
-        /\.cf$/,
-        /\.gq$/,
-        // Known phishing indicators
-        /paypal.*verify/i,
-        /amazon.*confirm/i,
-        /secure.*signin/i,
-        /account.*suspended/i,
-        /urgent.*verify/i
-      ];
-
-      // Check for known malicious patterns
-      if (untrustedPatterns.some(pattern => pattern.test(hostname))) {
-        return 'unsafe';
-      }
-
-      // Check for suspicious patterns (URL shorteners, obfuscation)
-      if (suspiciousPatterns.some(pattern => pattern.test(url))) {
-        return 'warning';
-      }
-
-      // HTTP is slightly suspicious but not necessarily unsafe
-      // Only flag as warning if it's a domain that SHOULD use HTTPS
-      const shouldUseHttps = hostname.includes('login') || hostname.includes('account') || hostname.includes('secure');
-      if (urlObj.protocol !== 'https:' && !hostname.includes('localhost') && shouldUseHttps) {
-        return 'warning';
-      }
-
-      // Default to safe for legitimate domains
-      // Only specific red flags should trigger warnings/unsafe
+    if (safeDomains.some(domain => hostname.endsWith(domain))) {
       return 'safe';
+    }
 
-    } catch (e) {
-      console.warn('URL parsing failed for safety check:', url, e);
-      return 'unknown';
+    // Quick check: Obviously malicious patterns - skip VirusTotal
+    const untrustedPatterns = [
+      /.*-login\..*/, /.*account-verification\..*/, /.*secure-update\..*/,
+      /\.xyz$/, /\.top$/, /\.loan$/, /\.download$/, /\.link$/,
+      /\.click$/, /\.review$/, /\.tk$/, /\.ml$/, /\.ga$/, /\.cf$/, /\.gq$/,
+      /paypal.*verify/i, /amazon.*confirm/i, /account.*suspended/i
+    ];
+
+    if (untrustedPatterns.some(pattern => pattern.test(hostname))) {
+      return 'unsafe';
+    }
+
+    // Scrape VirusTotal for threat analysis
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+      const vtUrl = `https://www.virustotal.com/gui/search/${encodeURIComponent(hostname)}`;
+      const response = await fetch(vtUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0'
+        }
+      });
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        console.log(`[VT Check] Failed to fetch VT for ${hostname}: ${response.status}`);
+        return 'safe'; // Default to safe if VT unavailable
+      }
+
+      const html = await response.text();
+
+      // Look for detection indicators in the HTML
+      // VT embeds data in script tags and meta tags
+      const detectionPatterns = [
+        /"malicious":\s*(\d+)/i,
+        /"suspicious":\s*(\d+)/i,
+        /"harmless":\s*(\d+)/i,
+        /"undetected":\s*(\d+)/i,
+        /positives['":\s]+(\d+)/i,
+        /detection.*ratio['":\s]+(\d+)/i
+      ];
+
+      let malicious = 0;
+      let suspicious = 0;
+
+      for (const pattern of detectionPatterns) {
+        const match = html.match(pattern);
+        if (match) {
+          const count = parseInt(match[1]);
+          if (pattern.source.includes('malicious')) malicious = count;
+          if (pattern.source.includes('suspicious')) suspicious = count;
+          if (pattern.source.includes('positives')) malicious = Math.max(malicious, count);
+        }
+      }
+
+      console.log(`[VT Check] ${hostname} - Malicious: ${malicious}, Suspicious: ${suspicious}`);
+
+      // Determine safety based on detections
+      if (malicious > 3) {
+        return 'unsafe'; // Multiple vendors flagged as malicious
+      } else if (malicious > 0 || suspicious > 5) {
+        return 'warning'; // Some detections or many suspicious
+      } else {
+        return 'safe'; // Clean or minimal detections
+      }
+
+    } catch (vtError) {
+      console.log(`[VT Check] Error scraping VT for ${hostname}:`, vtError.message);
+      // Fall back to safe on error (VT timeout, network issue, etc.)
+      return 'safe';
     }
 
   } catch (error) {
-    console.error('Error checking URL safety:', error);
+    console.error('Error in checkURLSafety:', error);
     return 'unknown';
   }
 };
