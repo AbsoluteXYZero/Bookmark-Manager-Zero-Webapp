@@ -2927,9 +2927,9 @@ function setupEventListeners() {
     closeAllMenus();
   });
 
-  // Test VirusTotal (Debug)
+  // Test Safety Check (Debug)
   testVTBtn.addEventListener('click', async () => {
-    const testUrl = prompt('Enter a URL or domain to test with VirusTotal:\n\n(You can enter just "netfilm.app" or a full URL)', 'netfilm.app');
+    const testUrl = prompt('Enter a URL or domain to test safety:\n\n(You can enter just "netfilm.app" or a full URL)', 'netfilm.app');
     if (testUrl) {
       try {
         const response = await browser.runtime.sendMessage({
@@ -2938,7 +2938,7 @@ function setupEventListeners() {
         });
         if (response.success) {
           const resultEmoji = response.result === 'safe' ? '🟢' : response.result === 'warning' ? '🟡' : response.result === 'unsafe' ? '🔴' : '⚪';
-          alert(`VirusTotal API Test:\n\n${resultEmoji} Domain: ${response.hostname}\nResult: ${response.result}\n\nCheck the extension console for detailed API logs.\n\nTo see logs:\nabout:debugging → This Firefox → Bookmark Manager Zero → Inspect`);
+          alert(`Safety Check Test (URLhaus):\n\n${resultEmoji} Domain: ${response.hostname}\nResult: ${response.result}\n\nCheck the extension console for detailed API logs.\n\nTo see logs:\nabout:debugging → This Firefox → Bookmark Manager Zero → Inspect`);
         } else {
           alert(`Test failed: ${response.error}\n\nCheck the extension console for details.`);
         }

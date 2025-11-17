@@ -215,30 +215,8 @@ const checkLinkStatus = async (url) => {
   }
 };
 
-// Helper function to get VirusTotal cookies from browser
-const getVTCookies = async () => {
-  try {
-    const cookies = await browser.cookies.getAll({
-      domain: '.virustotal.com'
-    });
-
-    if (cookies.length === 0) {
-      console.log(`[VT Cookies] No VT cookies found - user may need to visit virustotal.com first`);
-      return null;
-    }
-
-    // Build cookie header string
-    const cookieString = cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
-    console.log(`[VT Cookies] Found ${cookies.length} cookies for virustotal.com`);
-    return cookieString;
-  } catch (error) {
-    console.error(`[VT Cookies] Error getting cookies:`, error);
-    return null;
-  }
-};
-
-// Check URL safety by scraping VirusTotal
-// WARNING: For personal use only. May violate VirusTotal ToS if distributed.
+// Check URL safety using URLhaus API
+// URLhaus by abuse.ch - free malware URL database
 const checkURLSafety = async (url) => {
   // Check cache first
   const cached = await getCachedResult(url, 'safetyStatusCache');
@@ -252,153 +230,76 @@ const checkURLSafety = async (url) => {
   let result;
 
   try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname.toLowerCase();
+    console.log(`[URLhaus] Checking ${url} via URLhaus API`);
 
-    console.log(`[Safety Check] Checking ${url} via VirusTotal UI Search API`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-    // Get VT cookies from browser
-    const cookieString = await getVTCookies();
-    if (!cookieString) {
-      console.log(`[Safety Check] No VT cookies available - returning unknown`);
+    // URLhaus API endpoint
+    const apiUrl = 'https://urlhaus-api.abuse.ch/v1/url/';
+
+    // Prepare POST body (URL-encoded)
+    const formData = new URLSearchParams();
+    formData.append('url', url);
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Bookmark Manager Zero Extension)'
+      },
+      body: formData.toString()
+    });
+
+    clearTimeout(timeout);
+
+    console.log(`[URLhaus] Response status: ${response.status}`);
+
+    if (!response.ok) {
+      console.log(`[URLhaus] Request failed with status ${response.status}`);
       result = 'unknown';
       await setCachedResult(url, result, 'safetyStatusCache');
       return result;
     }
 
-    // Use the WORKING endpoint discovered from Firefox Network tab!
-    // Two-step process:
-    // 1. Search: /ui/search?query={url} -> get URL ID
-    // 2. Fetch: /ui/urls/{id} -> get threat data
-    try {
-      // Step 1: Search for the URL to get its ID
-      const searchUrl = `https://www.virustotal.com/ui/search?limit=1&query=${encodeURIComponent(url)}`;
-      console.log(`[VT Search] Step 1: Searching for URL: ${searchUrl}`);
+    const data = await response.json();
+    console.log(`[URLhaus] API response:`, data);
 
-      const searchController = new AbortController();
-      const searchTimeout = setTimeout(() => searchController.abort(), 15000);
+    // Parse URLhaus response
+    if (data.query_status === 'no_results') {
+      // URL not in URLhaus database = likely safe (or not yet discovered)
+      console.log(`[URLhaus] No results found - URL not in database`);
+      result = 'safe';
+    } else if (data.query_status === 'ok') {
+      // URL found in database - check status
+      const urlStatus = data.url_status; // 'online', 'offline', etc.
+      const threat = data.threat; // 'malware_download', etc.
 
-      const searchResponse = await fetch(searchUrl, {
-        signal: searchController.signal,
-        credentials: 'omit', // Don't use automatic cookies, we're setting them manually
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0',
-          'Referer': 'https://www.virustotal.com/',
-          'Origin': 'https://www.virustotal.com',
-          'Cookie': cookieString
-        }
-      });
+      console.log(`[URLhaus] URL status: ${urlStatus}, Threat: ${threat}`);
 
-      clearTimeout(searchTimeout);
-
-      console.log(`[VT Search] Response status: ${searchResponse.status}`);
-
-      if (!searchResponse.ok) {
-        console.log(`[VT Search] Search failed with status ${searchResponse.status}`);
-        result = 'unknown';
-        await setCachedResult(url, result, 'safetyStatusCache');
-        return result;
-      }
-
-      const searchData = await searchResponse.json();
-      console.log(`[VT Search] Search results:`, searchData);
-
-      // Extract URL ID from search results
-      let urlId = null;
-      if (searchData.data && searchData.data.length > 0) {
-        // The ID is in the first result
-        urlId = searchData.data[0].id;
-        console.log(`[VT Search] Found URL ID: ${urlId}`);
-      } else {
-        console.log(`[VT Search] No results found for ${url}`);
-        // No VT data = assume safe (not in VT database)
-        result = 'safe';
-        await setCachedResult(url, result, 'safetyStatusCache');
-        return result;
-      }
-
-      // Step 2: Fetch detailed threat data for the URL
-      const urlDetailsUrl = `https://www.virustotal.com/ui/urls/${urlId}`;
-      console.log(`[VT Fetch] Step 2: Fetching URL details: ${urlDetailsUrl}`);
-
-      const detailsController = new AbortController();
-      const detailsTimeout = setTimeout(() => detailsController.abort(), 15000);
-
-      const detailsResponse = await fetch(urlDetailsUrl, {
-        signal: detailsController.signal,
-        credentials: 'omit', // Don't use automatic cookies, we're setting them manually
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0',
-          'Referer': 'https://www.virustotal.com/',
-          'Origin': 'https://www.virustotal.com',
-          'Cookie': cookieString
-        }
-      });
-
-      clearTimeout(detailsTimeout);
-
-      console.log(`[VT Fetch] Response status: ${detailsResponse.status}`);
-
-      if (!detailsResponse.ok) {
-        console.log(`[VT Fetch] Details fetch failed with status ${detailsResponse.status}`);
-        result = 'unknown';
-        await setCachedResult(url, result, 'safetyStatusCache');
-        return result;
-      }
-
-      const detailsData = await detailsResponse.json();
-      console.log(`[VT Fetch] URL details:`, detailsData);
-
-      // Parse threat data
-      let malicious = 0;
-      let suspicious = 0;
-
-      if (detailsData.data && detailsData.data.attributes) {
-        const attrs = detailsData.data.attributes;
-
-        // Get last_analysis_stats
-        if (attrs.last_analysis_stats) {
-          malicious = attrs.last_analysis_stats.malicious || 0;
-          suspicious = attrs.last_analysis_stats.suspicious || 0;
-          console.log(`[VT Fetch] Analysis stats - Malicious: ${malicious}, Suspicious: ${suspicious}`);
-        }
-
-        // Also log reputation if available
-        if (attrs.reputation !== undefined) {
-          console.log(`[VT Fetch] Reputation score: ${attrs.reputation}`);
-        }
-
-        // Log categories if available
-        if (attrs.categories) {
-          console.log(`[VT Fetch] Categories:`, attrs.categories);
-        }
-      }
-
-      // Determine safety based on detections
-      if (malicious > 3) {
+      if (urlStatus === 'online') {
+        // Active malware URL
         result = 'unsafe';
-      } else if (malicious > 0 || suspicious > 5) {
+      } else if (urlStatus === 'offline') {
+        // Was malicious but now offline - still warn
         result = 'warning';
       } else {
-        result = 'safe';
+        // Unknown status
+        result = 'warning';
       }
-
-      console.log(`[VT Fetch] Final result for ${url}: ${result}`);
-      await setCachedResult(url, result, 'safetyStatusCache');
-      return result;
-
-    } catch (vtError) {
-      console.error(`[VT Check] Error checking VT for ${url}:`, vtError.message);
-      // Fall back to unknown on error
+    } else {
+      // Unexpected response
+      console.log(`[URLhaus] Unexpected query_status: ${data.query_status}`);
       result = 'unknown';
-      await setCachedResult(url, result, 'safetyStatusCache');
-      return result;
     }
 
+    console.log(`[URLhaus] Final result for ${url}: ${result}`);
+    await setCachedResult(url, result, 'safetyStatusCache');
+    return result;
+
   } catch (error) {
-    console.error('Error in checkURLSafety:', error);
+    console.error(`[URLhaus] Error checking URL safety:`, error);
     result = 'unknown';
     await setCachedResult(url, result, 'safetyStatusCache');
     return result;
@@ -422,7 +323,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === "testVirusTotal") {
-    // Manual VT test for debugging
+    // Manual safety test for debugging (now using URLhaus)
     (async () => {
       try {
         // Add protocol if missing
@@ -434,17 +335,17 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const urlObj = new URL(testUrl);
         const hostname = urlObj.hostname.toLowerCase();
 
-        console.log(`[VT TEST] Manual test for ${hostname}`);
-        console.log(`[VT TEST] Calling checkURLSafety...`);
+        console.log(`[Safety TEST] Manual test for ${hostname}`);
+        console.log(`[Safety TEST] Calling checkURLSafety (URLhaus)...`);
 
         // Call the actual safety check function
         const result = await checkURLSafety(testUrl);
 
-        console.log(`[VT TEST] Final result: ${result}`);
+        console.log(`[Safety TEST] Final result: ${result}`);
 
         sendResponse({ success: true, result, hostname });
       } catch (error) {
-        console.error(`[VT TEST] Error:`, error);
+        console.error(`[Safety TEST] Error:`, error);
         sendResponse({ success: false, error: error.message });
       }
     })();
