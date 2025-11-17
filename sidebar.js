@@ -1452,7 +1452,11 @@ async function handleBookmarkAction(action, bookmark) {
     case 'save-pdf':
       // Save page as PDF
       if (isPreviewMode) {
-        alert('PDF saving requires the Firefox extension. Please install the extension to use this feature.');
+        // In preview mode, open the page and show instructions
+        window.open(bookmark.url, '_blank');
+        setTimeout(() => {
+          alert('Page opened in a new tab. To save as PDF:\n\n1. Wait for the page to load\n2. Press Ctrl+P (or Cmd+P on Mac)\n3. Select "Save as PDF" as the destination\n4. Click "Save"');
+        }, 500);
       } else {
         // Open the page in a new tab and save as PDF
         const tab = await browser.tabs.create({ url: bookmark.url });
