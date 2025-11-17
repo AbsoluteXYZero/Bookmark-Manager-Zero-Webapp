@@ -1,5 +1,0 @@
-{
-  "name": "Bookmark Manager Zero",
-  "description": "A modern bookmark manager for Firefox. Features include tagging, searching, live link status checking, site previews on hover, and multiple view options (grid/list) with zoom controls.",
-  "requestFramePermissions": []
-}
