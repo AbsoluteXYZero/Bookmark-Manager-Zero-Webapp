@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Create, read, update, and delete bookmarks
   - Full integration with Firefox native bookmark API
   - Bidirectional sync between extension and Firefox bookmarks
+    - Syncs title, URL, and folder structure
+    - Note: Firefox API does not support tags or keywords
   - Real-time bookmark event listeners with debouncing
 
 - **Folder Management**
@@ -95,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preview mode has limitations compared to full extension
 - Link checking requires active internet connection and VirusTotal API availability
 - VirusTotal and Textise integrations depend on third-party service availability
+- Firefox bookmark API does not support tags or keywords (limitation of the browser API, not the extension)
 
 ### Browser Support
 - Firefox 109 or later

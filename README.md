@@ -11,6 +11,8 @@ A modern, feature-rich interface for managing Firefox bookmarks with enhanced sa
 - **Drag & Drop** - Reorganize bookmarks by dragging them between folders
 - **Real-time Search** - Instantly find bookmarks as you type
 - **Bidirectional Sync** - Changes in the extension immediately reflect in Firefox, and vice versa
+  - Syncs title, URL, and folder structure
+  - Note: Firefox API does not currently support syncing tags or keywords
 - **Folder Management** - Create, rename, delete, and organize folders with ease
 
 ### Advanced Features
@@ -124,6 +126,9 @@ The extension will be available on Firefox Add-ons once it exits beta.
 - Link checking requires internet connection
 - Textise integration requires third-party service
 - Large collections (1000+ bookmarks) may have performance impacts
+- Firefox bookmark API limitations:
+  - Tags and keywords are not currently supported for bidirectional sync
+  - Only title, URL, and folder structure sync between extension and Firefox
 
 ## Technical Details
 
