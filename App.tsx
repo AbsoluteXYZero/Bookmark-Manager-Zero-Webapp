@@ -152,6 +152,7 @@ export default function App() {
 
   const displayMenuRef = useRef<HTMLDivElement>(null);
   const columnMenuRef = useRef<HTMLDivElement>(null);
+  const checkedBookmarksRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme;
@@ -206,6 +207,8 @@ export default function App() {
       const fetchedTree = await getAllBookmarks();
       setBookmarkTree(fetchedTree);
       setFolderMap(buildFolderMap(fetchedTree));
+      // Clear checked bookmarks ref when loading fresh data
+      checkedBookmarksRef.current.clear();
     } catch (err) {
       console.error("Error loading bookmarks:", err);
       setError("Failed to load bookmarks.");
@@ -221,6 +224,8 @@ export default function App() {
       const fetchedTree = await getAllBookmarks();
       setBookmarkTree(fetchedTree);
       setFolderMap(buildFolderMap(fetchedTree));
+      // Clear checked bookmarks ref when reloading data
+      checkedBookmarksRef.current.clear();
     } catch (err) {
       console.error("Error reloading bookmarks:", err);
       setError("Failed to refresh bookmarks.");
@@ -254,21 +259,60 @@ export default function App() {
     });
   }, []);
 
+  // Effect to check bookmark statuses - fixed to prevent infinite loop
   useEffect(() => {
     const bookmarksToCheck: BookmarkItem[] = [];
     const traverse = (nodes: BookmarkNode[]) => nodes.forEach(node => {
-        if (node.type === 'bookmark' && node.status === 'unchecked') bookmarksToCheck.push(node);
+        if (node.type === 'bookmark' && node.status === 'unchecked' && !checkedBookmarksRef.current.has(node.id)) {
+          bookmarksToCheck.push(node);
+        }
         if (node.type === 'folder') traverse(node.children);
     });
     traverse(bookmarkTree);
-    
+
     if (bookmarksToCheck.length > 0) {
+        // Mark these bookmarks as being checked to prevent re-checking
+        bookmarksToCheck.forEach(item => checkedBookmarksRef.current.add(item.id));
+
         const checkAll = async () => {
-            for (const item of bookmarksToCheck) {
-                setBookmarkTree(prev => updateNodeInTree(prev, item.id, n => ({ ...n, status: 'checking', safetyStatus: 'checking' })));
-                const [status, safetyStatus] = await Promise.all([checkLinkStatus(item.url), checkLinkSafety(item.url)]);
-                setBookmarkTree(prev => updateNodeInTree(prev, item.id, n => ({ ...n, status, safetyStatus })));
-            }
+            // Set all to 'checking' status
+            setBookmarkTree(prev => {
+              let updated = prev;
+              for (const item of bookmarksToCheck) {
+                updated = updateNodeInTree(updated, item.id, n => ({ ...n, status: 'checking', safetyStatus: 'checking' }));
+              }
+              return updated;
+            });
+
+            // Check all bookmarks in parallel
+            const checkPromises = bookmarksToCheck.map(async (item) => {
+              try {
+                const [status, safetyStatus] = await Promise.all([
+                  checkLinkStatus(item.url),
+                  checkLinkSafety(item.url)
+                ]);
+                return { id: item.id, status, safetyStatus };
+              } catch (error) {
+                console.error(`Error checking bookmark ${item.id} (${item.url}):`, error);
+                // If there's an error, mark as dead/unknown
+                return { id: item.id, status: 'dead' as const, safetyStatus: 'unknown' as const };
+              }
+            });
+
+            const results = await Promise.all(checkPromises);
+
+            // Batch update all results at once
+            setBookmarkTree(prev => {
+              let updated = prev;
+              for (const result of results) {
+                updated = updateNodeInTree(updated, result.id, n => ({
+                  ...n,
+                  status: result.status,
+                  safetyStatus: result.safetyStatus
+                }));
+              }
+              return updated;
+            });
         };
         checkAll();
     }
@@ -398,10 +442,13 @@ export default function App() {
     setDuplicateWarning(null);
 
     const updatedBookmarkData = { ...previousState, title, url, tags, keyword, status: 'unchecked', safetyStatus: 'unknown' } as BookmarkItem;
-    
+
+    // Remove from checked bookmarks ref so it will be rechecked
+    checkedBookmarksRef.current.delete(id);
+
     setBookmarkTree(currentTree => findAndUpdateNode(currentTree, id, () => updatedBookmarkData));
     setUndoHistory(prev => [...prev, { type: 'edit', payload: { previousState, currentState: updatedBookmarkData } }]);
-    
+
     try {
         await updateBookmark(id, { title, url, tags, keyword });
         // No hard reload to preserve scroll
@@ -538,6 +585,11 @@ export default function App() {
                 const newTreeAfterUndo = findAndUpdateNode(bookmarkTree, previousState.id, () => previousState);
                 setBookmarkTree(newTreeAfterUndo);
                 setFolderMap(buildFolderMap(newTreeAfterUndo));
+
+                // If restoring a bookmark with unchecked status, remove it from checked ref
+                if (previousState.type === 'bookmark' && previousState.status === 'unchecked') {
+                    checkedBookmarksRef.current.delete(previousState.id);
+                }
 
                 if (previousState.type === 'bookmark') {
                     await updateBookmark(previousState.id, { title: previousState.title, url: previousState.url, tags: previousState.tags, keyword: previousState.keyword });
@@ -731,8 +783,9 @@ export default function App() {
       {duplicateWarning && (<DuplicateWarningModal conflictingItem={duplicateWarning.conflictingItem} folderMap={folderMap} onClose={() => setDuplicateWarning(null)} onDelete={() => { handleDeleteItems([duplicateWarning.itemBeingEdited]); setDuplicateWarning(null); setEditingBookmark(null); }} onConfirmSave={handleConfirmDuplicateSave} />)}
       
       {undoHistory.length > 0 && <FloatingUndoButton onUndo={handleUndo} />}
-      
+
       {hoveredBookmark && viewMode === 'grid' && <SitePreview target={hoveredBookmark} />}
+      </div>
     </div>
   );
 }
