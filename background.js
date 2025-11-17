@@ -169,11 +169,12 @@ const checkURLSafety = async (url) => {
     // Fallback: Use a simpler heuristic-based check
     // Check URL patterns that are commonly associated with threats
     const suspiciousPatterns = [
-      /bit\.ly\/[a-z0-9]{5,}/i,  // Shortened URLs (could be suspicious)
-      /tinyurl\.com/i,
-      /goo\.gl/i,
-      /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/,  // IP addresses instead of domains
-      /[^\w\s-].*[^\w\s-].*[^\w\s-]/,  // Multiple special chars (potential obfuscation)
+      /bit\.ly\//i,        // bit.ly URL shortener
+      /tinyurl\.com/i,     // TinyURL shortener
+      /goo\.gl/i,          // Google shortener
+      /t\.co\//i,          // Twitter shortener
+      /ow\.ly/i,           // Owly shortener
+      /\/\/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/,  // IP addresses instead of domain names
     ];
 
     // Parse URL
