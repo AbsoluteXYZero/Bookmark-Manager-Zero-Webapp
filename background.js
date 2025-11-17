@@ -388,18 +388,31 @@ const checkURLSafety = async (url) => {
       .replace(/^https?:\/\//, '')
       .replace(/\/$/, '');
 
-    console.log(`[URLhaus] Checking URL against database: ${normalizedUrl}`);
+    // Extract domain (hostname with port, no path)
+    const domain = normalizedUrl.split('/')[0];
 
-    // Check if URL is in the malicious set
+    console.log(`[URLhaus] Checking full URL: ${normalizedUrl}`);
+    console.log(`[URLhaus] Checking domain: ${domain}`);
+
+    // Check if full URL is in the malicious set
     if (maliciousUrlsSet.has(normalizedUrl)) {
-      console.log(`[URLhaus] ⚠️ URL found in malicious database!`);
+      console.log(`[URLhaus] ⚠️ Full URL found in malicious database!`);
       result = 'unsafe';
       console.log(`[Safety Check] Final result for ${url}: ${result}`);
       await setCachedResult(url, result, 'safetyStatusCache');
       return result;
     }
 
-    console.log(`[URLhaus] ✓ URL not found in malicious database`);
+    // Also check if just the domain is flagged (entire domain compromised)
+    if (maliciousUrlsSet.has(domain)) {
+      console.log(`[URLhaus] ⚠️ Domain found in malicious database!`);
+      result = 'unsafe';
+      console.log(`[Safety Check] Final result for ${url}: ${result}`);
+      await setCachedResult(url, result, 'safetyStatusCache');
+      return result;
+    }
+
+    console.log(`[URLhaus] ✓ Neither full URL nor domain found in malicious database`);
 
     // URLhaus says safe - check Google Safe Browsing as redundancy if API key is configured
     const storage = await browser.storage.local.get('googleSafeBrowsingApiKey');
