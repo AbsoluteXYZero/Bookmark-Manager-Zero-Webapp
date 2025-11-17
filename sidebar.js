@@ -1273,7 +1273,7 @@ function matchesFilter(bookmark) {
   switch (activeFilter) {
     case 'live':
       return linkStatus === 'live';
-    case 'broken':
+    case 'parked':
       return linkStatus === 'parked';
     case 'dead':
       return linkStatus === 'dead';
