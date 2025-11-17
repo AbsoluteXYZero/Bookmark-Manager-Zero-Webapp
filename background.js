@@ -252,7 +252,9 @@ const checkURLSafety = async (url) => {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0',
+          'Referer': 'https://www.virustotal.com/',
+          'Origin': 'https://www.virustotal.com'
         }
       });
 
@@ -296,7 +298,9 @@ const checkURLSafety = async (url) => {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0',
+          'Referer': 'https://www.virustotal.com/',
+          'Origin': 'https://www.virustotal.com'
         }
       });
 
@@ -398,7 +402,21 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const hostname = urlObj.hostname.toLowerCase();
 
         console.log(`[VT TEST] Manual test for ${hostname}`);
-        console.log(`[VT TEST] Calling checkURLSafety...`);
+
+        // WORKAROUND: Open VT homepage in background tab to establish cookies
+        console.log(`[VT TEST] Opening VT homepage to establish cookies...`);
+        const tab = await browser.tabs.create({
+          url: 'https://www.virustotal.com/',
+          active: false
+        });
+
+        // Wait 3 seconds for page to load and cookies to be set
+        console.log(`[VT TEST] Waiting 3 seconds for cookies...`);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Close the tab
+        await browser.tabs.remove(tab.id);
+        console.log(`[VT TEST] Cookies established, calling checkURLSafety...`);
 
         // Call the actual safety check function
         const result = await checkURLSafety(testUrl);
