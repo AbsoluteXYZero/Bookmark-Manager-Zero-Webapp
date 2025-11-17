@@ -28,6 +28,7 @@ A modern, feature-rich interface for managing Firefox bookmarks with enhanced sa
 - **Duplicate Warning** - Alerts when creating a bookmark that already exists
 - **Enhanced Delete Confirmation** - Shows item counts before deletion
 - **Two-Tier Deletion Warnings** - Extra warning when deleting all copies of duplicate bookmarks
+- **Undo Deletion** - 5-second window to undo bookmark/folder deletions with countdown timer
 
 ### User Experience
 - **Material Design Icons** - Clean, modern SVG icons throughout
@@ -175,7 +176,7 @@ Bookmark-Manager-Zero-Webapp/
 
 ### Planned Features
 - [ ] Import bookmarks from JSON
-- [ ] Undo last deletion
+- [x] Undo last deletion
 - [ ] Sort bookmarks by date/name
 - [ ] Keyboard shortcuts for common actions
 - [ ] Tag support

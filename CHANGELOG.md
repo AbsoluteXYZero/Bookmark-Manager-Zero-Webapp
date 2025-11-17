@@ -39,6 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Protected Firefox built-in folders from deletion
   - Enhanced delete confirmations with item counts
   - Safeguard against deleting all copies of duplicate bookmarks
+  - **Undo deletion with 5-second countdown** (NEW)
+    - Toast notification appears after deletion
+    - Visual countdown timer (5 seconds)
+    - Click "Undo" to restore deleted bookmarks/folders
+    - Recursively restores folders with all children
+    - Works in both extension and preview modes
   - Export/backup to JSON format
 
 - **Context Menu Actions**
@@ -62,6 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Responsive layout
   - Keyboard shortcut (Ctrl+Shift+B) to toggle sidebar
   - Version badge display (Beta v0.1)
+  - Undo toast notification with countdown timer
+  - Slide-up animation for toast appearance
 
 - **Preview Mode**
   - Mock data for testing without Firefox API
@@ -98,7 +106,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Planned for v0.2
 - Import bookmarks from JSON
-- Undo last deletion
 - Sort bookmarks by date, name, or custom order
 - Improved performance for large collections
 
