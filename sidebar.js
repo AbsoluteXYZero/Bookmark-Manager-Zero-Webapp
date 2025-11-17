@@ -383,21 +383,24 @@ function renderNodes(nodes, container) {
 function getStatusDotHtml(linkStatus) {
   const statusIcons = {
     'live': `
-      <span class="status-icon status-live" title="Link is live and accessible">
+      <span class="status-icon status-live" title="Link is live and accessible
+Returns successful HTTP response">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
         </svg>
       </span>
     `,
     'dead': `
-      <span class="status-icon status-dead" title="Link is dead or unreachable">
+      <span class="status-icon status-dead" title="Link is dead or unreachable
+Error, timeout, or connection failed">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
         </svg>
       </span>
     `,
     'parked': `
-      <span class="status-icon status-parked" title="Domain is parked">
+      <span class="status-icon status-parked" title="Domain is parked
+Redirects to domain parking service">
         <svg width="14" height="14" viewBox="0 0 24 24">
           <g fill="currentColor">
             <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
