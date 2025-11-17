@@ -5,6 +5,99 @@ All notable changes to Bookmark Manager Zero will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2] - 2025-01-17 (Beta Release)
+
+### Added
+- **Heuristic-Based Security Analysis**
+  - Real-time security checking for all bookmarked URLs
+  - Pattern-based threat detection without external API dependencies
+  - Multi-tier security assessment:
+    - **Safe (Green Shield)**: HTTPS-enabled sites on trusted domain whitelist
+    - **Warning (Yellow Shield)**: HTTP-only sites, URL shorteners, or suspicious patterns
+    - **Unsafe (Red Shield)**: Known phishing patterns, malicious TLDs, fake login pages
+    - **Unknown (Gray Shield)**: Sites not in whitelist or blacklist
+  - Comprehensive blacklist patterns:
+    - Fake login pages (e.g., paypal-login.xyz)
+    - Suspicious TLDs (.xyz, .top, .loan, .download, .link, .click, .review)
+    - Phishing indicators (paypal+verify, amazon+confirm, urgent+verify, etc.)
+  - Expanded safe domain whitelist (Google, GitHub, Wikipedia, Netflix, LinkedIn, etc.)
+  - Real-time "Recheck Security Status" option in context menu
+
+- **Extension Icons**
+  - Custom SVG icons featuring shield+bookmark design
+  - Multi-size support (16x16, 32x32, 48x48, 96x96)
+  - Green color scheme (#22c55e, #4ade80) with glow effects
+  - Dark background (#1a1a1a) for better contrast
+
+### Changed
+- **Link Status Checking Improvements**
+  - Upgraded from basic fetch to intelligent HEAD/GET fallback strategy
+  - HEAD request attempted first (lightweight, faster)
+  - Automatic fallback to GET with no-cors mode if HEAD fails
+  - Better CORS handling and error recovery
+  - Parking domain detection enhanced with redirect checking
+  - 10-second timeout for initial check, 8-second timeout for fallback
+
+- **Security Shield Behavior**
+  - Shields are now purely informational (no longer clickable)
+  - Updated tooltips to accurately describe heuristic analysis
+  - Removed VirusTotal integration and references
+  - Context menu action renamed from "Recheck with VirusTotal" to "Recheck Security Status"
+  - Preview mode now simulates heuristic security checking
+
+- **User Interface**
+  - Version badge updated to Beta v0.2
+  - All security tooltips rewritten for clarity and accuracy
+  - Removed external service dependencies from UI text
+
+### Removed
+- **Switch Sidebar Side Feature**
+  - Removed "Switch Sidebar Side" button from settings menu
+  - Removed associated event listeners and functions
+  - Removed DOM references for sidebar switching
+
+- **VirusTotal Integration**
+  - Removed VirusTotal API dependency
+  - Removed VirusTotal report opening functionality
+  - Removed all VirusTotal-related UI text and tooltips
+  - Shields no longer open external VirusTotal pages when clicked
+
+### Fixed
+- **Toolbar Icon Display**
+  - Added `action` field to manifest.json for Manifest V3 compliance
+  - Extension can now be pinned to Firefox toolbar
+  - Toolbar button correctly toggles sidebar on click
+  - Icon displays properly in Firefox extensions menu
+
+- **Link Status Detection**
+  - CORS-related failures now handled gracefully with fallback
+  - Opaque responses from no-cors mode properly interpreted as "live"
+  - Network timeouts properly caught and reported
+  - Console warnings improved for debugging
+
+### Security
+- **Enhanced Threat Detection**
+  - Zero-dependency security checking (no external APIs required)
+  - Privacy-friendly (no URL data sent to third parties)
+  - Instant security assessments with no network delay
+  - Comprehensive phishing pattern database
+  - Protection against typosquatting and homograph attacks
+
+### Technical
+- Updated manifest.json to include `action` field for toolbar button
+- Changed background script type to `module` in manifest
+- Improved error handling in background.js
+- Added comprehensive pattern matching with regular expressions
+- Cache version updated to v=20250117009
+
+### Known Issues
+- Security checking is heuristic-based and may occasionally produce false positives
+- Some legitimate sites with suspicious TLDs may show warnings
+- Sites not in whitelist/blacklist will show "unknown" status
+- Link checking still requires internet connection for fetch requests
+
+---
+
 ## [0.1] - 2025-01-17 (Beta Release)
 
 ### Added
@@ -107,10 +200,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Future Releases
 
-### Planned for v0.2
+### Planned for v0.3
 - Import bookmarks from JSON
 - Sort bookmarks by date, name, or custom order
 - Improved performance for large collections
+- Customizable security whitelist/blacklist
 
 ### Planned for v1.0
 - Submit to Firefox Add-ons
