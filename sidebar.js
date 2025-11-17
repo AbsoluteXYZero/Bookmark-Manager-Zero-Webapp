@@ -46,7 +46,6 @@ const openInTabBtn = document.getElementById('openInTabBtn');
 const closeExtensionBtn = document.getElementById('closeExtensionBtn');
 const clearCacheBtn = document.getElementById('clearCacheBtn');
 const rescanBookmarksBtn = document.getElementById('rescanBookmarksBtn');
-const testVTBtn = document.getElementById('testVTBtn');
 
 // Undo toast DOM elements
 const undoToast = document.getElementById('undoToast');
@@ -2924,28 +2923,6 @@ function setupEventListeners() {
   // Rescan all bookmarks
   rescanBookmarksBtn.addEventListener('click', async () => {
     await rescanAllBookmarks();
-    closeAllMenus();
-  });
-
-  // Test Safety Check (Debug)
-  testVTBtn.addEventListener('click', async () => {
-    const testUrl = prompt('Enter a URL or domain to test safety:\n\n(You can enter just "netfilm.app" or a full URL)', 'netfilm.app');
-    if (testUrl) {
-      try {
-        const response = await browser.runtime.sendMessage({
-          action: 'testVirusTotal',
-          url: testUrl
-        });
-        if (response.success) {
-          const resultEmoji = response.result === 'safe' ? '🟢' : response.result === 'warning' ? '🟡' : response.result === 'unsafe' ? '🔴' : '⚪';
-          alert(`Safety Check Test (URLhaus):\n\n${resultEmoji} Domain: ${response.hostname}\nResult: ${response.result}\n\nCheck the extension console for detailed API logs.\n\nTo see logs:\nabout:debugging → This Firefox → Bookmark Manager Zero → Inspect`);
-        } else {
-          alert(`Test failed: ${response.error}\n\nCheck the extension console for details.`);
-        }
-      } catch (error) {
-        alert(`Test failed: ${error.message}`);
-      }
-    }
     closeAllMenus();
   });
 

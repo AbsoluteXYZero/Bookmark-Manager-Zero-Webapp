@@ -221,6 +221,71 @@ let maliciousUrlsSet = new Set();
 let urlhausLastUpdate = 0;
 const URLHAUS_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 
+// Google Safe Browsing API configuration (optional fallback)
+// Get a free API key at: https://developers.google.com/safe-browsing/v4/get-started
+// Free tier: 10,000 requests per day
+const GOOGLE_SAFE_BROWSING_API_KEY = ''; // Leave empty to disable Google Safe Browsing fallback
+
+// Check URL using Google Safe Browsing API (fallback/redundancy check)
+const checkGoogleSafeBrowsing = async (url) => {
+  if (!GOOGLE_SAFE_BROWSING_API_KEY) {
+    console.log(`[Google SB] API key not configured, skipping`);
+    return 'unknown';
+  }
+
+  try {
+    console.log(`[Google SB] Checking ${url}...`);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+    const response = await fetch(
+      `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${GOOGLE_SAFE_BROWSING_API_KEY}`,
+      {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          client: {
+            clientId: 'bookmark-manager-zero',
+            clientVersion: '0.7.0'
+          },
+          threatInfo: {
+            threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
+            platformTypes: ['ANY_PLATFORM'],
+            threatEntryTypes: ['URL'],
+            threatEntries: [{ url }]
+          }
+        })
+      }
+    );
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      console.error(`[Google SB] API error: ${response.status}`);
+      return 'unknown';
+    }
+
+    const data = await response.json();
+
+    // If matches found, URL is unsafe
+    if (data.matches && data.matches.length > 0) {
+      console.log(`[Google SB] ⚠️ Threat detected:`, data.matches[0].threatType);
+      return 'unsafe';
+    }
+
+    console.log(`[Google SB] ✓ No threats found`);
+    return 'safe';
+
+  } catch (error) {
+    console.error(`[Google SB] Error:`, error.message);
+    return 'unknown';
+  }
+};
+
 // Download and parse URLhaus malicious URLs text file
 const updateURLhausDatabase = async () => {
   try {
@@ -315,12 +380,29 @@ const checkURLSafety = async (url) => {
     if (maliciousUrlsSet.has(normalizedUrl)) {
       console.log(`[URLhaus] ⚠️ URL found in malicious database!`);
       result = 'unsafe';
-    } else {
-      console.log(`[URLhaus] ✓ URL not found in malicious database`);
-      result = 'safe';
+      console.log(`[Safety Check] Final result for ${url}: ${result}`);
+      await setCachedResult(url, result, 'safetyStatusCache');
+      return result;
     }
 
-    console.log(`[URLhaus] Final result for ${url}: ${result}`);
+    console.log(`[URLhaus] ✓ URL not found in malicious database`);
+
+    // URLhaus says safe - check Google Safe Browsing as redundancy
+    if (GOOGLE_SAFE_BROWSING_API_KEY) {
+      console.log(`[Safety Check] URLhaus says safe, checking Google Safe Browsing as redundancy...`);
+      const googleResult = await checkGoogleSafeBrowsing(url);
+
+      if (googleResult === 'unsafe') {
+        console.log(`[Safety Check] Google Safe Browsing flagged URL as unsafe!`);
+        result = 'unsafe';
+        await setCachedResult(url, result, 'safetyStatusCache');
+        return result;
+      }
+    }
+
+    // Both checks passed (or Google SB not configured)
+    result = 'safe';
+    console.log(`[Safety Check] Final result for ${url}: ${result}`);
     await setCachedResult(url, result, 'safetyStatusCache');
     return result;
 
@@ -346,36 +428,6 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ status });
     });
     return true; // Required to indicate an asynchronous response.
-  }
-
-  if (request.action === "testVirusTotal") {
-    // Manual safety test for debugging (now using URLhaus)
-    (async () => {
-      try {
-        // Add protocol if missing
-        let testUrl = request.url;
-        if (!testUrl.startsWith('http://') && !testUrl.startsWith('https://')) {
-          testUrl = 'https://' + testUrl;
-        }
-
-        const urlObj = new URL(testUrl);
-        const hostname = urlObj.hostname.toLowerCase();
-
-        console.log(`[Safety TEST] Manual test for ${hostname}`);
-        console.log(`[Safety TEST] Calling checkURLSafety (URLhaus)...`);
-
-        // Call the actual safety check function
-        const result = await checkURLSafety(testUrl);
-
-        console.log(`[Safety TEST] Final result: ${result}`);
-
-        sendResponse({ success: true, result, hostname });
-      } catch (error) {
-        console.error(`[Safety TEST] Error:`, error);
-        sendResponse({ success: false, error: error.message });
-      }
-    })();
-    return true;
   }
 
   if (request.action === "getPageContent") {
