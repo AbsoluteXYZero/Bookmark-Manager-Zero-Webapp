@@ -102,7 +102,36 @@ const checkURLSafety = async (url) => {
       const urlObj = new URL(url);
       hostname = urlObj.hostname.toLowerCase();
 
-      // Check for suspicious patterns
+      // Known malicious/untrusted domain patterns (blacklist)
+      // These are commonly used in phishing, malware, and scam campaigns
+      const untrustedPatterns = [
+        // Fake login pages
+        /.*-login\..*/,
+        /.*account-verification\..*/,
+        /.*secure-update\..*/,
+        /.*verify-account\..*/,
+        // Suspicious TLDs commonly used in phishing
+        /\.xyz$/,
+        /\.top$/,
+        /\.loan$/,
+        /\.download$/,
+        /\.link$/,
+        /\.click$/,
+        /\.review$/,
+        // Known phishing indicators
+        /paypal.*verify/i,
+        /amazon.*confirm/i,
+        /secure.*signin/i,
+        /account.*suspended/i,
+        /urgent.*verify/i
+      ];
+
+      // Check for known malicious patterns
+      if (untrustedPatterns.some(pattern => pattern.test(hostname))) {
+        return 'unsafe';
+      }
+
+      // Check for suspicious patterns (warnings, not necessarily unsafe)
       if (suspiciousPatterns.some(pattern => pattern.test(url))) {
         return 'warning';
       }
@@ -116,7 +145,9 @@ const checkURLSafety = async (url) => {
       const safeDomains = [
         'google.com', 'youtube.com', 'github.com', 'stackoverflow.com',
         'wikipedia.org', 'mozilla.org', 'firefox.com', 'microsoft.com',
-        'apple.com', 'amazon.com', 'reddit.com', 'twitter.com', 'facebook.com'
+        'apple.com', 'amazon.com', 'reddit.com', 'twitter.com', 'facebook.com',
+        'instagram.com', 'linkedin.com', 'netflix.com', 'adobe.com',
+        'dropbox.com', 'wordpress.com', 'blogspot.com', 'medium.com'
       ];
 
       if (safeDomains.some(domain => hostname.endsWith(domain))) {
