@@ -716,6 +716,14 @@ function createBookmarkElement(bookmark) {
         <span class="icon">⧉</span>
         <span>Open in New Tab</span>
       </button>
+      <button class="action-btn" data-action="reader-view">
+        <span class="icon">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M21,4H3A2,2 0 0,0 1,6V19A2,2 0 0,0 3,21H21A2,2 0 0,0 23,19V6A2,2 0 0,0 21,4M3,19V6H11V19H3M21,19H13V6H21V19M14,9.5H20V11H14V9.5M14,12H20V13.5H14V12M14,14.5H20V16H14V14.5Z"/>
+          </svg>
+        </span>
+        <span>Reader View</span>
+      </button>
       <button class="action-btn" data-action="edit">
         <span class="icon">✏️</span>
         <span>Edit</span>
@@ -1397,6 +1405,12 @@ async function handleBookmarkAction(action, bookmark) {
 
     case 'open-new-tab':
       window.open(bookmark.url, '_blank');
+      break;
+
+    case 'reader-view':
+      // Open in Firefox Reader View mode
+      const readerUrl = `about:reader?url=${encodeURIComponent(bookmark.url)}`;
+      window.open(readerUrl, '_blank');
       break;
 
     case 'edit':
