@@ -16,6 +16,7 @@ let displayOptions = {
   url: true
 };
 let currentEditItem = null;
+let zoomLevel = 100;
 
 // DOM Elements
 const bookmarkList = document.getElementById('bookmarkList');
@@ -28,6 +29,10 @@ const themeBtn = document.getElementById('themeBtn');
 const themeMenu = document.getElementById('themeMenu');
 const viewBtn = document.getElementById('viewBtn');
 const viewMenu = document.getElementById('viewMenu');
+const zoomBtn = document.getElementById('zoomBtn');
+const zoomMenu = document.getElementById('zoomMenu');
+const zoomSlider = document.getElementById('zoomSlider');
+const zoomValue = document.getElementById('zoomValue');
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsMenu = document.getElementById('settingsMenu');
 const switchSideBtn = document.getElementById('switchSideBtn');
@@ -53,6 +58,7 @@ async function init() {
 
   loadTheme();
   loadView();
+  loadZoom();
   await loadBookmarks();
   setupEventListeners();
   renderBookmarks();
@@ -122,6 +128,50 @@ function setView(newView) {
   if (!isPreviewMode) {
     browser.storage.local.set({ viewMode });
   }
+}
+
+// Load zoom preference
+function loadZoom() {
+  if (isPreviewMode) {
+    zoomLevel = 100;
+    applyZoom();
+    return;
+  }
+
+  browser.storage.local.get('zoomLevel').then(result => {
+    zoomLevel = result.zoomLevel || 100;
+    applyZoom();
+    updateZoomDisplay();
+  });
+}
+
+// Apply zoom
+function applyZoom() {
+  const zoomFactor = zoomLevel / 100;
+  bookmarkList.style.transform = `scale(${zoomFactor})`;
+  bookmarkList.style.transformOrigin = 'top left';
+
+  // Adjust container to account for scaling
+  // When scaled down, the content takes less visual space
+  // When scaled up, it takes more visual space
+  bookmarkList.style.width = `${100 / zoomFactor}%`;
+  bookmarkList.style.height = `${100 / zoomFactor}%`;
+}
+
+// Set zoom
+function setZoom(newZoom) {
+  zoomLevel = newZoom;
+  applyZoom();
+  updateZoomDisplay();
+  if (!isPreviewMode) {
+    browser.storage.local.set({ zoomLevel });
+  }
+}
+
+// Update zoom display
+function updateZoomDisplay() {
+  if (zoomSlider) zoomSlider.value = zoomLevel;
+  if (zoomValue) zoomValue.textContent = `${zoomLevel}%`;
 }
 
 // Load bookmarks from Firefox API
@@ -701,6 +751,7 @@ function closeAllMenus() {
   settingsMenu.classList.remove('show');
   themeMenu.classList.remove('show');
   viewMenu.classList.remove('show');
+  zoomMenu.classList.remove('show');
 }
 
 // Check link status using background script
@@ -1274,6 +1325,18 @@ function setupEventListeners() {
       setView(selectedView);
       closeAllMenus();
     });
+  });
+
+  // Zoom menu
+  zoomBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    zoomMenu.classList.toggle('show');
+  });
+
+  // Zoom slider
+  zoomSlider.addEventListener('input', (e) => {
+    const newZoom = parseInt(e.target.value);
+    setZoom(newZoom);
   });
 
   // Settings menu
