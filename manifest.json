@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Bookmark Manager Zero",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "A modern interface for the native Firefox bookmark manager.",
   "permissions": [
     "bookmarks",
     "storage",
-    "tabs"
+    "tabs",
+    "cookies"
   ],
   "host_permissions": [
     "<all_urls>"

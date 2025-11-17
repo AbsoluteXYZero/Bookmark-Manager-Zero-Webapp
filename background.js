@@ -215,6 +215,28 @@ const checkLinkStatus = async (url) => {
   }
 };
 
+// Helper function to get VirusTotal cookies from browser
+const getVTCookies = async () => {
+  try {
+    const cookies = await browser.cookies.getAll({
+      domain: '.virustotal.com'
+    });
+
+    if (cookies.length === 0) {
+      console.log(`[VT Cookies] No VT cookies found - user may need to visit virustotal.com first`);
+      return null;
+    }
+
+    // Build cookie header string
+    const cookieString = cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
+    console.log(`[VT Cookies] Found ${cookies.length} cookies for virustotal.com`);
+    return cookieString;
+  } catch (error) {
+    console.error(`[VT Cookies] Error getting cookies:`, error);
+    return null;
+  }
+};
+
 // Check URL safety by scraping VirusTotal
 // WARNING: For personal use only. May violate VirusTotal ToS if distributed.
 const checkURLSafety = async (url) => {
@@ -235,6 +257,15 @@ const checkURLSafety = async (url) => {
 
     console.log(`[Safety Check] Checking ${url} via VirusTotal UI Search API`);
 
+    // Get VT cookies from browser
+    const cookieString = await getVTCookies();
+    if (!cookieString) {
+      console.log(`[Safety Check] No VT cookies available - returning unknown`);
+      result = 'unknown';
+      await setCachedResult(url, result, 'safetyStatusCache');
+      return result;
+    }
+
     // Use the WORKING endpoint discovered from Firefox Network tab!
     // Two-step process:
     // 1. Search: /ui/search?query={url} -> get URL ID
@@ -249,12 +280,13 @@ const checkURLSafety = async (url) => {
 
       const searchResponse = await fetch(searchUrl, {
         signal: searchController.signal,
-        credentials: 'include',
+        credentials: 'omit', // Don't use automatic cookies, we're setting them manually
         headers: {
           'Accept': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0',
           'Referer': 'https://www.virustotal.com/',
-          'Origin': 'https://www.virustotal.com'
+          'Origin': 'https://www.virustotal.com',
+          'Cookie': cookieString
         }
       });
 
@@ -295,12 +327,13 @@ const checkURLSafety = async (url) => {
 
       const detailsResponse = await fetch(urlDetailsUrl, {
         signal: detailsController.signal,
-        credentials: 'include',
+        credentials: 'omit', // Don't use automatic cookies, we're setting them manually
         headers: {
           'Accept': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0',
           'Referer': 'https://www.virustotal.com/',
-          'Origin': 'https://www.virustotal.com'
+          'Origin': 'https://www.virustotal.com',
+          'Cookie': cookieString
         }
       });
 
