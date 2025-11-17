@@ -2008,6 +2008,192 @@ async function exportBookmarks() {
   }
 }
 
+// DUPLICATE DETECTION: Find and manage duplicate bookmarks
+async function findDuplicates() {
+  try {
+    let allBookmarks = [];
+
+    if (isPreviewMode) {
+      // Use mock data in preview mode
+      allBookmarks = getAllBookmarksFlat(bookmarkTree);
+    } else {
+      // Get all bookmarks from Firefox
+      const tree = await browser.bookmarks.getTree();
+      allBookmarks = getAllBookmarksFlat(tree);
+    }
+
+    // Group bookmarks by URL
+    const urlMap = new Map();
+    for (const bookmark of allBookmarks) {
+      if (bookmark.url) { // Only process bookmarks (not folders)
+        if (!urlMap.has(bookmark.url)) {
+          urlMap.set(bookmark.url, []);
+        }
+        urlMap.get(bookmark.url).push(bookmark);
+      }
+    }
+
+    // Find duplicates (URLs with more than one bookmark)
+    const duplicates = [];
+    for (const [url, bookmarks] of urlMap.entries()) {
+      if (bookmarks.length > 1) {
+        duplicates.push({ url, bookmarks });
+      }
+    }
+
+    if (duplicates.length === 0) {
+      alert('✓ No duplicate bookmarks found!\n\nAll your bookmarks have unique URLs.');
+      return;
+    }
+
+    // Show duplicates modal
+    showDuplicatesModal(duplicates);
+
+  } catch (error) {
+    console.error('Error finding duplicates:', error);
+    alert('Failed to scan for duplicates. Please try again.');
+  }
+}
+
+// Helper: Get all bookmarks from tree (recursive, flattened)
+function getAllBookmarksFlat(tree, parentPath = '') {
+  let bookmarks = [];
+
+  const processNode = (node, path) => {
+    if (node.url) {
+      // It's a bookmark
+      bookmarks.push({
+        ...node,
+        parentPath: path
+      });
+    }
+    if (node.children) {
+      // It's a folder - process children
+      const newPath = path ? `${path} > ${node.title || 'Untitled'}` : node.title || 'Root';
+      for (const child of node.children) {
+        processNode(child, newPath);
+      }
+    }
+  };
+
+  if (Array.isArray(tree)) {
+    for (const node of tree) {
+      processNode(node, parentPath);
+    }
+  } else {
+    processNode(tree, parentPath);
+  }
+
+  return bookmarks;
+}
+
+// Show duplicates modal
+function showDuplicatesModal(duplicates) {
+  const modal = document.getElementById('duplicatesModal');
+  const content = document.getElementById('duplicatesContent');
+
+  // Build HTML for duplicates
+  let html = `
+    <div style="margin-bottom: 1rem;">
+      <p><strong>Found ${duplicates.length} URL(s) with duplicates (${duplicates.reduce((sum, d) => sum + d.bookmarks.length, 0)} total bookmarks)</strong></p>
+      <p style="color: #666; font-size: 0.9rem;">Select the bookmarks you want to delete:</p>
+    </div>
+  `;
+
+  for (const duplicate of duplicates) {
+    html += `
+      <div style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(59, 130, 246, 0.05); border-radius: 6px; border: 1px solid rgba(59, 130, 246, 0.2);">
+        <div style="margin-bottom: 0.75rem;">
+          <strong style="color: #1e40af;">URL:</strong>
+          <a href="${duplicate.url}" target="_blank" style="color: #2563eb; text-decoration: none; word-break: break-all;">${duplicate.url}</a>
+        </div>
+        <div style="margin-left: 1rem;">
+    `;
+
+    for (const bookmark of duplicate.bookmarks) {
+      html += `
+        <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <input type="checkbox"
+                 id="dup-${bookmark.id}"
+                 data-bookmark-id="${bookmark.id}"
+                 class="duplicate-checkbox"
+                 style="cursor: pointer;">
+          <label for="dup-${bookmark.id}" style="cursor: pointer; flex: 1;">
+            <span style="font-weight: 500;">${bookmark.title || 'Untitled'}</span>
+            <span style="color: #666; font-size: 0.85rem;"> - in ${bookmark.parentPath || 'Root'}</span>
+          </label>
+        </div>
+      `;
+    }
+
+    html += `
+        </div>
+      </div>
+    `;
+  }
+
+  content.innerHTML = html;
+  modal.classList.remove('hidden');
+}
+
+// Close duplicates modal
+function closeDuplicatesModal() {
+  const modal = document.getElementById('duplicatesModal');
+  modal.classList.add('hidden');
+}
+
+// Delete selected duplicates
+async function deleteSelectedDuplicates() {
+  const checkboxes = document.querySelectorAll('.duplicate-checkbox:checked');
+
+  if (checkboxes.length === 0) {
+    alert('Please select at least one bookmark to delete.');
+    return;
+  }
+
+  const confirmed = confirm(`⚠ Delete ${checkboxes.length} selected bookmark(s)?\n\nThis action cannot be undone!`);
+  if (!confirmed) return;
+
+  if (isPreviewMode) {
+    alert(`✓ In preview mode. In the real extension, this would delete ${checkboxes.length} bookmarks.`);
+    closeDuplicatesModal();
+    return;
+  }
+
+  try {
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const checkbox of checkboxes) {
+      const bookmarkId = checkbox.dataset.bookmarkId;
+      try {
+        await browser.bookmarks.remove(bookmarkId);
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to delete bookmark ${bookmarkId}:`, error);
+        failCount++;
+      }
+    }
+
+    // Reload bookmarks
+    await loadBookmarks();
+    renderBookmarks();
+
+    // Close modal and show result
+    closeDuplicatesModal();
+
+    if (failCount === 0) {
+      alert(`✓ Successfully deleted ${successCount} bookmark(s)!`);
+    } else {
+      alert(`⚠ Deleted ${successCount} bookmark(s).\n${failCount} failed to delete.`);
+    }
+
+  } catch (error) {
+    console.error('Error deleting duplicates:', error);
+    alert('An error occurred while deleting bookmarks.');
+  }
+}
+
 // Close extension
 async function closeExtension() {
   if (isPreviewMode) {
@@ -2215,6 +2401,9 @@ function setupEventListeners() {
   // New folder
   document.getElementById('newFolderBtn').addEventListener('click', createNewFolder);
 
+  // Find duplicates
+  document.getElementById('findDuplicatesBtn').addEventListener('click', findDuplicates);
+
   // Close menus when clicking outside
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.bookmark-actions') && !e.target.closest('.bookmark-menu-btn') &&
@@ -2294,6 +2483,24 @@ function setupEventListeners() {
       saveNewFolder();
     } else if (e.key === 'Escape') {
       closeAddFolderModal();
+    }
+  });
+
+  // Duplicates modal event listeners
+  const duplicatesModal = document.getElementById('duplicatesModal');
+  const duplicatesModalClose = document.getElementById('duplicatesModalClose');
+  const duplicatesModalCancel = document.getElementById('duplicatesModalCancel');
+  const duplicatesModalDelete = document.getElementById('duplicatesModalDelete');
+  const duplicatesModalOverlay = duplicatesModal.querySelector('.modal-overlay');
+
+  duplicatesModalClose.addEventListener('click', closeDuplicatesModal);
+  duplicatesModalCancel.addEventListener('click', closeDuplicatesModal);
+  duplicatesModalDelete.addEventListener('click', deleteSelectedDuplicates);
+  duplicatesModalOverlay.addEventListener('click', closeDuplicatesModal);
+
+  duplicatesModal.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeDuplicatesModal();
     }
   });
 
