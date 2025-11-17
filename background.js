@@ -242,12 +242,13 @@ const checkURLSafety = async (url) => {
     const formData = new URLSearchParams();
     formData.append('url', url);
 
+    console.log(`[URLhaus] Request body:`, formData.toString());
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       signal: controller.signal,
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/5.0 (Bookmark Manager Zero Extension)'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: formData.toString()
     });
@@ -258,6 +259,13 @@ const checkURLSafety = async (url) => {
 
     if (!response.ok) {
       console.log(`[URLhaus] Request failed with status ${response.status}`);
+      // Try to get error details
+      try {
+        const errorText = await response.text();
+        console.log(`[URLhaus] Error response body:`, errorText);
+      } catch (e) {
+        console.log(`[URLhaus] Could not read error response`);
+      }
       result = 'unknown';
       await setCachedResult(url, result, 'safetyStatusCache');
       return result;
