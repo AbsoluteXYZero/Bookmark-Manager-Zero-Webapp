@@ -47,8 +47,17 @@ const App: React.FC = () => {
                 if (!parsedArticle || !parsedArticle.content) {
                     throw new Error('Could not extract article content. This page might not be a standard article.');
                 }
-                
-                setArticle(parsedArticle);
+
+                // Extract pure text only - no HTML formatting
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = parsedArticle.content;
+                const pureText = tempDiv.textContent || tempDiv.innerText || '';
+
+                // Replace the HTML content with pure text
+                setArticle({
+                    ...parsedArticle,
+                    content: pureText
+                });
                 document.title = parsedArticle.title || document.title;
 
             } catch (err: any) {
@@ -90,7 +99,7 @@ const App: React.FC = () => {
                         From <a href={url!} target="_blank" rel="noopener noreferrer">{article?.siteName || new URL(url!).hostname}</a>
                     </p>
                 </header>
-                <div dangerouslySetInnerHTML={{ __html: article?.content || '' }} />
+                <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed">{article?.content || ''}</pre>
             </article>
         </main>
     );
