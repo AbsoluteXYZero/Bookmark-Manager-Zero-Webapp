@@ -262,9 +262,44 @@ const checkURLSafety = async (url) => {
       const html = await response.text();
       console.log(`[VT Check] Received HTML for ${hostname}, length: ${html.length}`);
 
-      // Log a sample of the HTML to help debug
-      const htmlSample = html.substring(0, 500);
-      console.log(`[VT Check] HTML sample: ${htmlSample}`);
+      // Log larger sample to find embedded JSON state
+      console.log(`[VT Check] First 1000 chars:`, html.substring(0, 1000));
+      console.log(`[VT Check] Middle section:`, html.substring(3000, 4000));
+      console.log(`[VT Check] End section:`, html.substring(html.length - 1000));
+
+      // Look for common SPA state patterns
+      const statePatterns = [
+        /__INITIAL_STATE__/,
+        /__NUXT__/,
+        /window\.__data/,
+        /"last_analysis_stats"/,
+        /"last_analysis_results"/,
+        /data-vue-meta/
+      ];
+
+      console.log('[VT Check] Searching for embedded state patterns:');
+      statePatterns.forEach(pattern => {
+        if (pattern.test(html)) {
+          console.log(`  ✓ Found: ${pattern.source}`);
+          // Extract the data around this pattern
+          const index = html.search(pattern);
+          if (index !== -1) {
+            const context = html.substring(index, index + 500);
+            console.log(`  Context:`, context);
+          }
+        }
+      });
+
+      // Try to extract script tag contents
+      const scriptMatches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+      if (scriptMatches) {
+        console.log(`[VT Check] Found ${scriptMatches.length} script tags`);
+        scriptMatches.slice(0, 5).forEach((script, i) => {
+          if (script.length > 200 && script.length < 10000) {
+            console.log(`  Script ${i + 1} (${script.length} chars):`, script.substring(0, 300));
+          }
+        });
+      }
 
       // Look for detection indicators in the HTML
       // VT embeds data in script tags and meta tags
