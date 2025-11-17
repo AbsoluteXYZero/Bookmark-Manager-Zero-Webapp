@@ -338,6 +338,17 @@ const updateURLhausDatabase = async () => {
     console.log(`[URLhaus] Database updated: ${count} malicious URLs loaded`);
     console.log(`[URLhaus] Sample URLs from database:`, sampleUrls);
 
+    // Debug: search for specific test patterns
+    const testPatterns = ['wicar', 'eicar', 'malware.wicar'];
+    for (const pattern of testPatterns) {
+      const matches = Array.from(maliciousUrlsSet).filter(url => url.includes(pattern));
+      if (matches.length > 0) {
+        console.log(`[URLhaus DEBUG] Found ${matches.length} URLs containing "${pattern}":`, matches.slice(0, 5));
+      } else {
+        console.log(`[URLhaus DEBUG] No URLs found containing "${pattern}"`);
+      }
+    }
+
     // Store update timestamp
     await browser.storage.local.set({
       urlhausLastUpdate: urlhausLastUpdate
