@@ -29,7 +29,8 @@
     }
   },
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["background.js"],
+    "type": "module"
   },
   "icons": {
     "16": "icons/bookmark-16.svg",

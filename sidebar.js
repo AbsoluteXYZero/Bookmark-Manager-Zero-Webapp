@@ -1679,7 +1679,11 @@ async function checkLinkStatus(url) {
   }
 }
 
-// Check URL safety with VirusTotal (placeholder - requires API key configuration)
+// Check URL safety with VirusTotal
+// NOTE: This feature requires a VirusTotal API key to function.
+// Without an API key, shields will show as "unknown" but remain clickable
+// to open VirusTotal.com for manual checking.
+// To enable: Add VirusTotal API integration to background.js
 async function checkSafetyStatus(url) {
   if (isPreviewMode) {
     // Simulate checking in preview mode
@@ -1692,8 +1696,8 @@ async function checkSafetyStatus(url) {
     });
   }
 
-  // In real extension, this would call VirusTotal API via background script
-  // For now, return unknown until VirusTotal API key is configured
+  // Returns 'unknown' until VirusTotal API is integrated
+  // Users can still click the shield icon to check URLs manually on VirusTotal.com
   return 'unknown';
 }
 

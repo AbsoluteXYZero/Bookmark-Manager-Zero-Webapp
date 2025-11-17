@@ -25,29 +25,56 @@ const checkLinkStatus = async (url) => {
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
 
   try {
-    const response = await fetch(url, { method: 'GET', signal: controller.signal });
+    // Try HEAD request first (lighter weight)
+    const response = await fetch(url, {
+      method: 'HEAD',
+      signal: controller.signal,
+      mode: 'cors',
+      credentials: 'omit',
+      redirect: 'follow'
+    });
     clearTimeout(timeoutId);
 
-    if (response.redirected) {
+    // Check if redirected to parking domain
+    if (response.redirected || response.url !== url) {
       const finalHost = new URL(response.url).hostname.toLowerCase();
-      // Check if the final destination is a known domain parking service
       if (PARKING_DOMAINS.some(domain => finalHost.includes(domain))) {
         return 'parked';
       }
     }
-    
-    // Check for successful status codes (2xx)
-    if (response.ok) {
+
+    // Check for successful status codes (2xx and 3xx)
+    if (response.ok || (response.status >= 300 && response.status < 400)) {
       return 'live';
     }
 
-    // If we get here, it's a 4xx or 5xx error, which means the link is dead.
+    // 4xx or 5xx error means the link is dead
     return 'dead';
 
   } catch (error) {
-    // This catches network errors, DNS errors, timeouts, etc.
     clearTimeout(timeoutId);
-    return 'dead';
+
+    // If HEAD fails, try GET with no-cors as fallback
+    try {
+      const fallbackController = new AbortController();
+      const fallbackTimeout = setTimeout(() => fallbackController.abort(), 8000);
+
+      const fallbackResponse = await fetch(url, {
+        method: 'GET',
+        signal: fallbackController.signal,
+        mode: 'no-cors',
+        credentials: 'omit',
+        redirect: 'follow'
+      });
+      clearTimeout(fallbackTimeout);
+
+      // no-cors mode returns opaque response, but if fetch succeeds, link is likely live
+      return 'live';
+    } catch (fallbackError) {
+      // Both HEAD and GET failed - link is likely dead
+      console.warn('Link check failed for:', url, fallbackError.message);
+      return 'dead';
+    }
   }
 };
 
