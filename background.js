@@ -80,17 +80,38 @@ const checkLinkStatus = async (url) => {
             'buy this domain',
             'domain is for sale',
             'this domain may be for sale',
+            'this domain is for sale',
+            'premium domain',
             'parked free',
             'domain parking',
+            'parked domain',
             'buy now',
             'make an offer',
+            'make offer',
             'expired domain',
             'domain expired',
             'register this domain',
+            'purchase this domain',
+            'acquire this domain',
+            'get this domain',
+            'domain is parked',
+            'parking page',
+            'coming soon',
+            'under construction',
             'sedo domain parking',
+            'sedo.com',
             'afternic.com/forsale',
+            'afternic.com',
+            'hugedomains.com',
             'bodis.com',
-            'parkingcrew'
+            'parkingcrew',
+            'domain name is for sale',
+            'inquire about this domain',
+            'interested in this domain',
+            'domain may be for sale',
+            'brandable domain',
+            'premium domains',
+            'domain broker'
           ];
 
           if (parkingIndicators.some(indicator => htmlLower.includes(indicator))) {
@@ -98,8 +119,9 @@ const checkLinkStatus = async (url) => {
           }
         }
       } catch (contentError) {
-        // Silently ignore all content check errors (CORS, timeout, etc.)
-        // This prevents content analysis failures from breaking link checking
+        // Log CORS and other errors for debugging parking detection issues
+        console.log(`[Parking Check] Content fetch failed for ${url}:`, contentError.message);
+        // Silently continue - don't break link checking
       }
 
       // If content check didn't find parking indicators (or failed), return live
