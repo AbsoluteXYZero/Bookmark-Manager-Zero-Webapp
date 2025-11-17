@@ -132,7 +132,7 @@ const BookmarkFolder: React.FC<BookmarkFolderProps> = (props) => {
   const count = folder.children.length;
   const displayCount = count > 9999 ? '9k+' : String(count);
 
-  const handleDragOver = (e: React.MouseEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (folderRef.current && !isBeingDragged) {
@@ -143,7 +143,7 @@ const BookmarkFolder: React.FC<BookmarkFolderProps> = (props) => {
     }
   };
 
-  const handleDragOverInto = (e: React.MouseEvent) => {
+  const handleDragOverInto = (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
       if (isInvalidDropTarget) return;
@@ -187,9 +187,21 @@ const BookmarkFolder: React.FC<BookmarkFolderProps> = (props) => {
         <div className="w-full col-span-full">
             <div
                 draggable="true"
-                onDragStart={() => onDragStart(folder)}
-                onDragEnd={onDragEnd}
-                onDrop={onDrop}
+                onDragStart={(e) => {
+                  console.log('[BookmarkFolder Grid] DragStart:', folder.title);
+                  e.stopPropagation();
+                  onDragStart(folder);
+                }}
+                onDragEnd={() => {
+                  console.log('[BookmarkFolder Grid] DragEnd:', folder.title);
+                  onDragEnd();
+                }}
+                onDrop={(e) => {
+                  console.log('[BookmarkFolder Grid] Drop event:', folder.title);
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDrop();
+                }}
                 onDragOver={handleDragOverInto}
                 className={`transition-opacity p-2 rounded-lg ${isBeingDragged ? 'opacity-30' : 'opacity-100'} ${isDropTargetHighlight && !isInvalidDropTarget ? 'bg-blue-500/10 ring-2 ring-blue-500' : ''} ${isDropTargetHighlight && isInvalidDropTarget ? 'bg-red-500/10 ring-2 ring-red-500 cursor-not-allowed' : ''}`}
             >
@@ -213,16 +225,28 @@ const BookmarkFolder: React.FC<BookmarkFolderProps> = (props) => {
 
 
   return (
-    <div 
+    <div
       className={`relative py-2 -my-2`} // Expands the vertical drop zone
       onDragOver={handleDragOver}
-      onDrop={onDrop}
+      onDrop={(e) => {
+        console.log('[BookmarkFolder List] Drop event:', folder.title);
+        e.preventDefault();
+        e.stopPropagation();
+        onDrop();
+      }}
     >
       {isDropTargetIndicatorAbove && <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 rounded-full z-20 -mt-0.5"></div>}
       <div
         draggable="true"
-        onDragStart={() => onDragStart(folder)}
-        onDragEnd={onDragEnd}
+        onDragStart={(e) => {
+          console.log('[BookmarkFolder List] DragStart:', folder.title);
+          e.stopPropagation();
+          onDragStart(folder);
+        }}
+        onDragEnd={() => {
+          console.log('[BookmarkFolder List] DragEnd:', folder.title);
+          onDragEnd();
+        }}
         className={`transition-all duration-300 cursor-grab ${partingClass} ${isBeingDragged ? 'opacity-30' : 'opacity-100'}`}
       >
         <div 

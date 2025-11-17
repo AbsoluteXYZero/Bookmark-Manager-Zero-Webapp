@@ -496,21 +496,50 @@ export default function App() {
     const itemToMove = draggedItem;
     const dropInfo = dragOverInfo;
 
+    console.log('[handleDrop] Called with:', { itemToMove, dropInfo });
+
     setDraggedItem(null);
     setDragOverInfo(null);
-    
-    if (!itemToMove || !dropInfo) return;
-    if (itemToMove.type === 'folder' && (itemToMove.id === dropInfo.parentId || isAncestor(itemToMove.id, dropInfo.parentId))) return;
-    
+
+    if (!itemToMove || !dropInfo) {
+      console.log('[handleDrop] Early exit - no item or drop info');
+      return;
+    }
+    if (itemToMove.type === 'folder' && (itemToMove.id === dropInfo.parentId || isAncestor(itemToMove.id, dropInfo.parentId))) {
+      console.log('[handleDrop] Early exit - invalid folder drop (ancestor check)');
+      return;
+    }
+
     const originalPosition = { parentId: itemToMove.parentId || 'root-id', index: itemToMove.index || 0 };
 
-    performOptimisticCreate(itemToMove, dropInfo.parentId, dropInfo.index);
+    // Check if we're moving within the same parent
+    const isSameParent = originalPosition.parentId === dropInfo.parentId;
+
+    // Calculate adjusted drop index
+    // When moving within same parent and drop index is after current position,
+    // we need to subtract 1 because removing the item first will shift indices
+    let adjustedDropIndex = dropInfo.index;
+    if (isSameParent && dropInfo.index > (itemToMove.index || 0)) {
+      adjustedDropIndex = dropInfo.index - 1;
+    }
+
+    console.log('[handleDrop] Moving:', {
+      itemTitle: itemToMove.type === 'bookmark' ? itemToMove.title : itemToMove.title,
+      from: originalPosition,
+      to: dropInfo,
+      adjustedIndex: adjustedDropIndex
+    });
+
+    // IMPORTANT: Delete first, then insert
+    // This prevents index shifting issues when moving within the same parent
     performOptimisticDelete([itemToMove]);
+    performOptimisticCreate(itemToMove, dropInfo.parentId, adjustedDropIndex);
 
     setUndoHistory(prev => [...prev, { type: 'move', payload: { item: itemToMove, from: originalPosition, to: dropInfo } }]);
-    
+
     try {
         await moveBookmarkOrFolder(itemToMove.id, dropInfo.parentId, dropInfo.index);
+        console.log('[handleDrop] Move successful');
     } catch(err) {
         console.error("Failed to move item:", err);
         setError("Failed to move the item. Please undo or reload.");
@@ -731,8 +760,9 @@ export default function App() {
       {duplicateWarning && (<DuplicateWarningModal conflictingItem={duplicateWarning.conflictingItem} folderMap={folderMap} onClose={() => setDuplicateWarning(null)} onDelete={() => { handleDeleteItems([duplicateWarning.itemBeingEdited]); setDuplicateWarning(null); setEditingBookmark(null); }} onConfirmSave={handleConfirmDuplicateSave} />)}
       
       {undoHistory.length > 0 && <FloatingUndoButton onUndo={handleUndo} />}
-      
+
       {hoveredBookmark && viewMode === 'grid' && <SitePreview target={hoveredBookmark} />}
+      </div>
     </div>
   );
 }

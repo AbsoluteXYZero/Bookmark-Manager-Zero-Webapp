@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bookmark Manager Zero - Sidebar Preview</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #1e293b;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .preview-container {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .preview-panel {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .preview-header {
+      background: #0f172a;
+      color: white;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    iframe {
+      border: none;
+      display: block;
+      background: white;
+    }
+    .info-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+      color: white;
+      padding: 16px;
+      text-align: center;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+    .info-banner a {
+      color: white;
+      text-decoration: underline;
+      margin-left: 8px;
+    }
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      display: flex;
+      gap: 8px;
+      z-index: 1000;
+    }
+    .controls button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #6366f1;
+      color: white;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .controls button:hover {
+      background: #4f46e5;
+    }
+    .controls button.active {
+      background: #818cf8;
+    }
+  </style>
+</head>
+<body>
+  <div class="info-banner">
+    🎨 Sidebar Preview - This shows how the extension will look in Firefox
+    <a href="INSTALLATION.md" target="_blank">View Installation Guide</a>
+  </div>
+
+  <div class="preview-container">
+    <!-- Standard Firefox Sidebar Width (300-350px) -->
+    <div class="preview-panel">
+      <div class="preview-header">
+        📱 Standard Width (350px) - Default Firefox Sidebar
+      </div>
+      <iframe src="sidebar.html" width="350" height="700"></iframe>
+    </div>
+
+    <!-- Narrow Sidebar -->
+    <div class="preview-panel">
+      <div class="preview-header">
+        📏 Narrow Width (280px) - Minimum Readable
+      </div>
+      <iframe src="sidebar.html" width="280" height="700"></iframe>
+    </div>
+
+    <!-- Wide Sidebar -->
+    <div class="preview-panel">
+      <div class="preview-header">
+        📐 Wide Width (450px) - Maximum Comfort
+      </div>
+      <iframe src="sidebar.html" width="450" height="700"></iframe>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="toggleTheme()">Toggle Theme</button>
+    <button onclick="reload()">Reload Preview</button>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const iframes = document.querySelectorAll('iframe');
+      iframes.forEach(iframe => {
+        try {
+          const body = iframe.contentDocument.body;
+          body.classList.toggle('dark');
+        } catch (e) {
+          console.log('Could not access iframe:', e);
+        }
+      });
+    }
+
+    function reload() {
+      location.reload();
+    }
+
+    // Auto-adjust container on window resize
+    window.addEventListener('resize', () => {
+      document.querySelector('.preview-container').style.paddingTop = '80px';
+    });
+
+    // Initial padding adjustment
+    document.querySelector('.preview-container').style.paddingTop = '80px';
+  </script>
+</body>
+</html>

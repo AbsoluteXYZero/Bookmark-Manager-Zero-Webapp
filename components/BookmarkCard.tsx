@@ -176,12 +176,14 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({ bookmark, viewMode, zoomInd
   const isBeingDragged = draggedItem?.id === bookmark.id;
   const isDropTargetAbove = dragOverInfo?.parentId === bookmark.parentId && dragOverInfo?.index === bookmark.index;
 
-  const handleDragOver = (e: React.MouseEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (cardRef.current && !isBeingDragged) {
         const rect = cardRef.current.getBoundingClientRect();
         const isTopHalf = e.clientY < rect.top + rect.height / 2;
         const newIndex = isTopHalf ? (bookmark.index ?? 0) : (bookmark.index ?? 0) + 1;
+        console.log('[BookmarkCard] DragOver:', { bookmarkTitle: bookmark.title, parentId: bookmark.parentId || 'root-id', newIndex });
         onDragOver({ parentId: bookmark.parentId || 'root-id', index: newIndex });
     }
   };
@@ -265,16 +267,28 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({ bookmark, viewMode, zoomInd
     const partingClass = partingDirection === 'up' ? '-translate-y-4' : partingDirection === 'down' ? 'translate-y-4' : '';
 
     return (
-        <div 
+        <div
           className="relative py-2 -my-2" // Expands the vertical drop zone
           onDragOver={handleDragOver}
-          onDrop={onDrop}
+          onDrop={(e) => {
+            console.log('[BookmarkCard List] Drop event:', bookmark.title);
+            e.preventDefault();
+            e.stopPropagation();
+            onDrop();
+          }}
         >
             {isDropTargetAbove && <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 rounded-full z-20 -mt-0.5"></div>}
             <div
                 draggable="true"
-                onDragStart={() => onDragStart(bookmark)}
-                onDragEnd={onDragEnd}
+                onDragStart={(e) => {
+                  console.log('[BookmarkCard] DragStart:', bookmark.title);
+                  e.stopPropagation();
+                  onDragStart(bookmark);
+                }}
+                onDragEnd={() => {
+                  console.log('[BookmarkCard] DragEnd:', bookmark.title);
+                  onDragEnd();
+                }}
                 className={`group relative flex items-center transition-all duration-300 cursor-grab ${partingClass} ${isBeingDragged ? 'opacity-30' : 'opacity-100'}`}
                 style={indentationStyle}
                 data-menu-open={isActionsMenuOpen}
@@ -371,15 +385,29 @@ const BookmarkCard: React.FC<BookmarkCardProps> = ({ bookmark, viewMode, zoomInd
 
   // Grid View
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onDragOver={handleDragOver}
+      onDrop={(e) => {
+        console.log('[BookmarkCard Grid] Drop event:', bookmark.title);
+        e.preventDefault();
+        e.stopPropagation();
+        onDrop();
+      }}
+    >
       {isDropTargetAbove && <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 rounded-full z-10 -mt-0.5"></div>}
-      <div 
+      <div
         ref={cardRef}
         draggable="true"
-        onDragStart={() => onDragStart(bookmark)}
-        onDragEnd={onDragEnd}
-        onDrop={onDrop}
-        onDragOver={(e) => e.preventDefault()}
+        onDragStart={(e) => {
+          console.log('[BookmarkCard Grid] DragStart:', bookmark.title);
+          e.stopPropagation();
+          onDragStart(bookmark);
+        }}
+        onDragEnd={() => {
+          console.log('[BookmarkCard Grid] DragEnd:', bookmark.title);
+          onDragEnd();
+        }}
         className={`group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-md dark:shadow-lg transition-all duration-300 hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20 hover:border-blue-500/50 flex flex-col ${isActionsMenuOpen ? 'z-20 overflow-visible' : 'overflow-hidden'} ${isBeingDragged ? 'opacity-30' : 'opacity-100'}`}
         onMouseLeave={onHoverEnd}
         data-menu-open={isActionsMenuOpen}
