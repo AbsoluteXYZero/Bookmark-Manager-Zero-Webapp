@@ -45,7 +45,7 @@ async function init() {
   const logoTitle = document.querySelector('.logo-title');
   const logoSubtitle = document.querySelector('.logo-subtitle');
   if (logoTitle) logoTitle.textContent = 'Bookmark Manager Zero';
-  if (logoSubtitle) logoSubtitle.textContent = 'A modern interface for your native bookmarks';
+  if (logoSubtitle) logoSubtitle.innerHTML = 'A modern interface for your native bookmarks • <span style="color: var(--md-sys-color-primary); font-weight: 500;">Beta v0.1</span>';
 
   // Force update filter button icon
   const filterToggle = document.getElementById('filterToggle');
