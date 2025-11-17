@@ -1406,8 +1406,8 @@ async function openVirusTotalReport(url) {
   }
 
   try {
-    // Create VirusTotal URL - they accept the URL directly in the search
-    const vtUrl = `https://www.virustotal.com/gui/url/${encodeURIComponent(url)}/detection`;
+    // Create VirusTotal search URL - this will show existing results or allow scanning
+    const vtUrl = `https://www.virustotal.com/gui/search/${encodeURIComponent(url)}`;
     await browser.tabs.create({ url: vtUrl });
   } catch (error) {
     console.error('Error opening VirusTotal report:', error);
