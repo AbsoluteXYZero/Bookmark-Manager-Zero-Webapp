@@ -18,6 +18,7 @@ let displayOptions = {
 let currentEditItem = null;
 let zoomLevel = 100;
 let checkedBookmarks = new Set(); // Track which bookmarks have been checked to prevent infinite loops
+let scanCancelled = false; // Flag to cancel ongoing scans
 
 // Undo system state
 let undoData = null;
@@ -246,6 +247,12 @@ async function autoCheckBookmarkStatuses() {
   const BATCH_DELAY = 1000; // 1 second delay between batches
 
   for (let i = 0; i < bookmarksToCheck.length; i += BATCH_SIZE) {
+    // Check if scan was cancelled
+    if (scanCancelled) {
+      console.log('Scan cancelled, stopping...');
+      return;
+    }
+
     const batch = bookmarksToCheck.slice(i, i + BATCH_SIZE);
 
     // Set batch to checking status
@@ -2732,7 +2739,14 @@ async function rescanAllBookmarks() {
   }
 
   try {
-    // Clear cache first
+    // Cancel any ongoing scan first
+    console.log('Cancelling any ongoing scan...');
+    scanCancelled = true;
+
+    // Wait a moment for the scan to stop
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Clear cache
     await browser.storage.local.remove(['linkStatusCache', 'safetyStatusCache']);
 
     // Clear the checkedBookmarks set to allow re-checking
@@ -2756,9 +2770,10 @@ async function rescanAllBookmarks() {
     resetBookmarkStatuses(bookmarkTree);
     renderBookmarks();
 
-    console.log('Starting rescan of all bookmarks...');
+    console.log('Starting fresh rescan of all bookmarks...');
 
-    // Trigger automatic re-check
+    // Reset the cancel flag and start new scan
+    scanCancelled = false;
     await autoCheckBookmarkStatuses();
 
     console.log('Rescan complete!');

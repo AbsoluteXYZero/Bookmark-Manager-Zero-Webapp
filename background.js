@@ -233,33 +233,9 @@ const checkURLSafety = async (url) => {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
 
-    // Quick check: Known safe domains - skip VirusTotal
-    // Keep this list VERY small to ensure most sites get checked via VT
-    const safeDomains = [
-      'google.com', 'youtube.com', 'github.com', 'mozilla.org'
-    ];
+    console.log(`[Safety Check] Checking ${hostname} via VirusTotal (no whitelisting)`);
 
-    if (safeDomains.some(domain => hostname.endsWith(domain))) {
-      result = 'safe';
-      console.log(`[Safety Check] ${hostname} is on safeDomains whitelist - skipping VT`);
-      await setCachedResult(url, result, 'safetyStatusCache');
-      return result;
-    }
-
-    // Quick check: Obviously malicious patterns - skip VirusTotal
-    const untrustedPatterns = [
-      /.*-login\..*/, /.*account-verification\..*/, /.*secure-update\..*/,
-      /\.xyz$/, /\.top$/, /\.loan$/, /\.download$/, /\.link$/,
-      /\.click$/, /\.review$/, /\.tk$/, /\.ml$/, /\.ga$/, /\.cf$/, /\.gq$/,
-      /paypal.*verify/i, /amazon.*confirm/i, /account.*suspended/i
-    ];
-
-    if (untrustedPatterns.some(pattern => pattern.test(hostname))) {
-      result = 'unsafe';
-      await setCachedResult(url, result, 'safetyStatusCache');
-      return result;
-    }
-
+    // Send EVERYTHING to VirusTotal - no whitelisting or pre-filtering
     // Scrape VirusTotal for threat analysis
     try {
       const controller = new AbortController();
