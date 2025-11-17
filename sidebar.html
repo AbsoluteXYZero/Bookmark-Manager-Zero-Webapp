@@ -1181,6 +1181,102 @@
       padding: 16px 24px;
       border-top: 1px solid var(--md-sys-color-outline-variant);
     }
+
+    /* Undo Toast Styles */
+    .undo-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10001;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .undo-toast.hidden {
+      display: none;
+    }
+
+    .undo-toast-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--md-sys-color-surface-container-high);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: 12px;
+      padding: 12px 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      min-width: 300px;
+      max-width: 500px;
+    }
+
+    .undo-toast-content svg {
+      color: var(--md-sys-color-primary);
+    }
+
+    .undo-toast-content > span {
+      flex: 1;
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface);
+      font-weight: 500;
+    }
+
+    .undo-toast-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .undo-btn {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .undo-btn:hover {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      transform: scale(1.05);
+    }
+
+    .undo-dismiss {
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      border: none;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .undo-dismiss:hover {
+      background: var(--md-sys-color-surface-container-highest);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
   </style>
 </head>
 <body class="blue-dark">
@@ -1552,6 +1648,20 @@
     </div>
   </div>
 
-  <script src="sidebar.js?v=20250117002"></script>
+  <!-- Undo Toast -->
+  <div id="undoToast" class="undo-toast hidden">
+    <div class="undo-toast-content">
+      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0;">
+        <path d="M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z"/>
+      </svg>
+      <span id="undoMessage">Bookmark deleted</span>
+      <div class="undo-toast-actions">
+        <button id="undoButton" class="undo-btn">Undo (<span id="undoCountdown">5</span>)</button>
+        <button id="undoDismiss" class="undo-dismiss">×</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidebar.js?v=20250117003"></script>
 </body>
 </html>

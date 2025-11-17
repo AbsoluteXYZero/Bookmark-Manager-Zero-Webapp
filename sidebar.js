@@ -18,6 +18,11 @@ let displayOptions = {
 let currentEditItem = null;
 let zoomLevel = 100;
 
+// Undo system state
+let undoData = null;
+let undoTimer = null;
+let undoCountdown = null;
+
 // DOM Elements
 const bookmarkList = document.getElementById('bookmarkList');
 const searchInput = document.getElementById('searchInput');
@@ -38,6 +43,13 @@ const settingsMenu = document.getElementById('settingsMenu');
 const openInTabBtn = document.getElementById('openInTabBtn');
 const switchSideBtn = document.getElementById('switchSideBtn');
 const closeExtensionBtn = document.getElementById('closeExtensionBtn');
+
+// Undo toast DOM elements
+const undoToast = document.getElementById('undoToast');
+const undoMessage = document.getElementById('undoMessage');
+const undoButton = document.getElementById('undoButton');
+const undoCountdownEl = document.getElementById('undoCountdown');
+const undoDismiss = document.getElementById('undoDismiss');
 
 // Initialize
 async function init() {
@@ -1397,12 +1409,138 @@ async function deleteFolder(id) {
   }
 
   try {
+    // Get folder details before deleting for undo functionality
+    const folderInfo = await browser.bookmarks.getSubTree(id);
+    const folder = folderInfo[0];
+
+    // Delete the folder
     await browser.bookmarks.removeTree(id);
+
+    // Show undo toast
+    showUndoToast({
+      type: 'folder',
+      data: folder,
+      message: `Folder "${folder.title || 'Untitled'}" deleted`
+    });
+
     await loadBookmarks();
     renderBookmarks();
   } catch (error) {
     console.error('Error deleting folder:', error);
     alert('Failed to delete folder');
+  }
+}
+
+// Undo System Functions
+
+// Show undo toast with countdown
+function showUndoToast(options) {
+  // Clear any existing undo data and timers
+  hideUndoToast();
+
+  // Store the undo data
+  undoData = options;
+
+  // Update message
+  undoMessage.textContent = options.message;
+
+  // Show the toast
+  undoToast.classList.remove('hidden');
+
+  // Start countdown
+  let countdown = 5;
+  undoCountdownEl.textContent = countdown;
+
+  undoCountdown = setInterval(() => {
+    countdown--;
+    undoCountdownEl.textContent = countdown;
+
+    if (countdown <= 0) {
+      hideUndoToast();
+    }
+  }, 1000);
+
+  // Auto-hide after 5 seconds
+  undoTimer = setTimeout(() => {
+    hideUndoToast();
+  }, 5000);
+}
+
+// Hide undo toast and clear timers
+function hideUndoToast() {
+  if (undoTimer) {
+    clearTimeout(undoTimer);
+    undoTimer = null;
+  }
+
+  if (undoCountdown) {
+    clearInterval(undoCountdown);
+    undoCountdown = null;
+  }
+
+  undoToast.classList.add('hidden');
+  undoData = null;
+}
+
+// Undo the last deletion
+async function performUndo() {
+  if (!undoData) return;
+
+  const { type, data } = undoData;
+
+  try {
+    if (type === 'bookmark') {
+      // Restore bookmark
+      await browser.bookmarks.create({
+        title: data.title,
+        url: data.url,
+        parentId: data.parentId,
+        index: data.index
+      });
+    } else if (type === 'folder') {
+      // Restore folder and its contents recursively
+      await restoreFolderRecursive(data, data.parentId, data.index);
+    }
+
+    // Reload and hide toast
+    await loadBookmarks();
+    renderBookmarks();
+    hideUndoToast();
+
+    console.log(`Undo successful: ${type} restored`);
+  } catch (error) {
+    console.error('Error during undo:', error);
+    alert('Failed to undo deletion');
+    hideUndoToast();
+  }
+}
+
+// Recursively restore a folder and all its contents
+async function restoreFolderRecursive(folderData, parentId, index) {
+  // Create the folder
+  const newFolder = await browser.bookmarks.create({
+    title: folderData.title,
+    parentId: parentId,
+    index: index
+  });
+
+  // Restore children if any
+  if (folderData.children && folderData.children.length > 0) {
+    for (let i = 0; i < folderData.children.length; i++) {
+      const child = folderData.children[i];
+      if (child.url) {
+        // It's a bookmark
+        await browser.bookmarks.create({
+          title: child.title,
+          url: child.url,
+          parentId: newFolder.id,
+          index: i
+        });
+      } else {
+        // It's a folder
+        await restoreFolderRecursive(child, newFolder.id, i);
+      }
+    }
   }
 }
 
@@ -1703,7 +1841,20 @@ async function deleteBookmark(id) {
   }
 
   try {
+    // Get bookmark details before deleting for undo functionality
+    const bookmarks = await browser.bookmarks.get(id);
+    const bookmark = bookmarks[0];
+
+    // Delete the bookmark
     await browser.bookmarks.remove(id);
+
+    // Show undo toast
+    showUndoToast({
+      type: 'bookmark',
+      data: bookmark,
+      message: `Bookmark "${bookmark.title || 'Untitled'}" deleted`
+    });
+
     await loadBookmarks();
     renderBookmarks();
   } catch (error) {
@@ -2666,6 +2817,15 @@ function setupEventListeners() {
 
     console.log('[Bookmark Sync] ✓ Real-time bidirectional sync enabled');
   }
+
+  // Undo toast event listeners
+  undoButton.addEventListener('click', () => {
+    performUndo();
+  });
+
+  undoDismiss.addEventListener('click', () => {
+    hideUndoToast();
+  });
 }
 
 // Initialize when DOM is ready
