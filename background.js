@@ -13,6 +13,40 @@ const PARKING_DOMAINS = [
   'namesilo.com',
 ];
 
+// Cache for link and safety checks (7 days TTL)
+const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+
+// Get cached result if valid
+const getCachedResult = async (url, cacheKey) => {
+  try {
+    const cache = await browser.storage.local.get(cacheKey);
+    if (cache[cacheKey]) {
+      const cached = cache[cacheKey][url];
+      if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        return cached.result;
+      }
+    }
+  } catch (e) {
+    console.warn('Cache read error:', e);
+  }
+  return null;
+};
+
+// Store result in cache
+const setCachedResult = async (url, result, cacheKey) => {
+  try {
+    const cache = await browser.storage.local.get(cacheKey);
+    const cacheData = cache[cacheKey] || {};
+    cacheData[url] = {
+      result,
+      timestamp: Date.now()
+    };
+    await browser.storage.local.set({ [cacheKey]: cacheData });
+  } catch (e) {
+    console.warn('Cache write error:', e);
+  }
+};
+
 /**
  * Checks if a URL is reachable and resolves to the expected domain.
  * This function runs in the background script, which has broader permissions
@@ -21,11 +55,22 @@ const PARKING_DOMAINS = [
  * @returns {Promise<'live' | 'dead' | 'parked'>} The status of the link.
  */
 const checkLinkStatus = async (url) => {
+  // Check cache first
+  const cached = await getCachedResult(url, 'linkStatusCache');
+  if (cached) {
+    console.log(`[Link Check] Using cached result for ${url}: ${cached}`);
+    return cached;
+  }
+
+  let result;
+
   // Check if the URL itself is on a parking domain
   try {
     const urlHost = new URL(url).hostname.toLowerCase();
     if (PARKING_DOMAINS.some(domain => urlHost.includes(domain))) {
-      return 'parked';
+      result = 'parked';
+      await setCachedResult(url, result, 'linkStatusCache');
+      return result;
     }
   } catch (e) {
     // Invalid URL, continue with fetch attempt
@@ -49,7 +94,9 @@ const checkLinkStatus = async (url) => {
     if (response.redirected || response.url !== url) {
       const finalHost = new URL(response.url).hostname.toLowerCase();
       if (PARKING_DOMAINS.some(domain => finalHost.includes(domain))) {
-        return 'parked';
+        result = 'parked';
+        await setCachedResult(url, result, 'linkStatusCache');
+        return result;
       }
     }
 
@@ -115,7 +162,9 @@ const checkLinkStatus = async (url) => {
           ];
 
           if (parkingIndicators.some(indicator => htmlLower.includes(indicator))) {
-            return 'parked';
+            result = 'parked';
+            await setCachedResult(url, result, 'linkStatusCache');
+            return result;
           }
         }
       } catch (contentError) {
@@ -125,11 +174,15 @@ const checkLinkStatus = async (url) => {
       }
 
       // If content check didn't find parking indicators (or failed), return live
-      return 'live';
+      result = 'live';
+      await setCachedResult(url, result, 'linkStatusCache');
+      return result;
     }
 
     // 4xx or 5xx error means the link is dead
-    return 'dead';
+    result = 'dead';
+    await setCachedResult(url, result, 'linkStatusCache');
+    return result;
 
   } catch (error) {
     clearTimeout(timeoutId);
@@ -149,11 +202,15 @@ const checkLinkStatus = async (url) => {
       clearTimeout(fallbackTimeout);
 
       // no-cors mode returns opaque response, but if fetch succeeds, link is likely live
-      return 'live';
+      result = 'live';
+      await setCachedResult(url, result, 'linkStatusCache');
+      return result;
     } catch (fallbackError) {
       // Both HEAD and GET failed - link is likely dead
       console.warn('Link check failed for:', url, fallbackError.message);
-      return 'dead';
+      result = 'dead';
+      await setCachedResult(url, result, 'linkStatusCache');
+      return result;
     }
   }
 };
@@ -161,6 +218,15 @@ const checkLinkStatus = async (url) => {
 // Check URL safety by scraping VirusTotal
 // WARNING: For personal use only. May violate VirusTotal ToS if distributed.
 const checkURLSafety = async (url) => {
+  // Check cache first
+  const cached = await getCachedResult(url, 'safetyStatusCache');
+  if (cached) {
+    console.log(`[Safety Check] Using cached result for ${url}: ${cached}`);
+    return cached;
+  }
+
+  let result;
+
   try {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
@@ -176,7 +242,9 @@ const checkURLSafety = async (url) => {
     ];
 
     if (safeDomains.some(domain => hostname.endsWith(domain))) {
-      return 'safe';
+      result = 'safe';
+      await setCachedResult(url, result, 'safetyStatusCache');
+      return result;
     }
 
     // Quick check: Obviously malicious patterns - skip VirusTotal
@@ -188,7 +256,9 @@ const checkURLSafety = async (url) => {
     ];
 
     if (untrustedPatterns.some(pattern => pattern.test(hostname))) {
-      return 'unsafe';
+      result = 'unsafe';
+      await setCachedResult(url, result, 'safetyStatusCache');
+      return result;
     }
 
     // Scrape VirusTotal for threat analysis
@@ -207,7 +277,9 @@ const checkURLSafety = async (url) => {
 
       if (!response.ok) {
         console.log(`[VT Check] Failed to fetch VT for ${hostname}: ${response.status}`);
-        return 'safe'; // Default to safe if VT unavailable
+        result = 'safe'; // Default to safe if VT unavailable
+        await setCachedResult(url, result, 'safetyStatusCache');
+        return result;
       }
 
       const html = await response.text();
@@ -240,22 +312,29 @@ const checkURLSafety = async (url) => {
 
       // Determine safety based on detections
       if (malicious > 3) {
-        return 'unsafe'; // Multiple vendors flagged as malicious
+        result = 'unsafe'; // Multiple vendors flagged as malicious
       } else if (malicious > 0 || suspicious > 5) {
-        return 'warning'; // Some detections or many suspicious
+        result = 'warning'; // Some detections or many suspicious
       } else {
-        return 'safe'; // Clean or minimal detections
+        result = 'safe'; // Clean or minimal detections
       }
+
+      await setCachedResult(url, result, 'safetyStatusCache');
+      return result;
 
     } catch (vtError) {
       console.log(`[VT Check] Error scraping VT for ${hostname}:`, vtError.message);
       // Fall back to safe on error (VT timeout, network issue, etc.)
-      return 'safe';
+      result = 'safe';
+      await setCachedResult(url, result, 'safetyStatusCache');
+      return result;
     }
 
   } catch (error) {
     console.error('Error in checkURLSafety:', error);
-    return 'unknown';
+    result = 'unknown';
+    await setCachedResult(url, result, 'safetyStatusCache');
+    return result;
   }
 };
 
