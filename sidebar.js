@@ -1432,14 +1432,16 @@ async function handleBookmarkAction(action, bookmark) {
       break;
 
     case 'reader-view':
-      // Open in Firefox Reader View mode
+      // Open in text-only reader view
       if (isPreviewMode) {
         // In preview mode, just open normally
         window.open(bookmark.url, '_blank');
       } else {
-        // Use about:reader URL format with tabs API
-        const readerUrl = `about:reader?url=${encodeURIComponent(bookmark.url)}`;
-        browser.tabs.create({ url: readerUrl });
+        // Use the built-in reader view from background.js
+        browser.runtime.sendMessage({
+          action: 'openReaderView',
+          url: bookmark.url
+        });
       }
       break;
 
