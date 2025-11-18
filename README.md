@@ -2,7 +2,7 @@
 
 **A modern, privacy-focused interface for managing your Firefox bookmarks.**
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Firefox](https://img.shields.io/badge/firefox-compatible-orange)
 
@@ -62,7 +62,7 @@ Coming soon - awaiting Mozilla review
 ### Manual Installation (Developer Mode)
 1. Clone this repository:
    ```bash
-   git clone https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero-Webapp.git
+   git clone https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero.git
    ```
 2. Open Firefox and navigate to `about:debugging`
 3. Click "This Firefox" → "Load Temporary Add-on"
@@ -218,7 +218,25 @@ Contributions welcome! Please:
 
 ## Changelog
 
-### v1.0.0 (Current) - Stable Release
+### v1.1.0 (Current) - Bug Fixes & Improvements
+
+**Critical Fixes:**
+- 🔧 **Fixed link checking feature** - Content Security Policy updated to allow URL checking for all bookmark URLs (previously blocked by overly restrictive CSP)
+- 🔧 **Fixed status indicators persisting** - Link and safety check results no longer reset to grey after bookmark operations (add/edit/delete)
+- 🔧 **Fixed preview images not restoring** - Preview thumbnails now properly restore after status checks complete
+
+**Improvements:**
+- ✨ **Auto-add https:// protocol** - Bookmarks can now be saved without typing protocol (e.g., "google.com" → "https://google.com")
+- 🎨 **Updated extension icons** - Removed black background square, cleaner transparent design with black-filled shield
+- 📝 **Corrected documentation** - Fixed theme count (3 themes, not 8) in README and release notes
+
+**Technical Details:**
+- CSP `connect-src` changed from specific domains to `https: http:` to enable link checking
+- Status data now preserved across `loadBookmarks()` calls using Map-based caching
+- Preview tracking key changed from `bookmark.id` to `bookmark.url` for consistency
+- Protocol detection regex: `^[a-zA-Z][a-zA-Z0-9+.-]*:` handles all valid URL schemes
+
+### v1.0.0 - Stable Release
 - **Private browsing support** with memory-only storage
 - **Global error boundary** with comprehensive logging
 - **Export bookmarks** as JSON backup
@@ -241,8 +259,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- **Issues:** [GitHub Issues](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero-Webapp/issues)
-- **Source Code:** [GitHub Repository](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero-Webapp)
+- **Issues:** [GitHub Issues](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero/issues)
+- **Source Code:** [GitHub Repository](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero)
 
 ## Acknowledgments
 

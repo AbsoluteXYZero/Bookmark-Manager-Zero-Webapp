@@ -1,9 +1,9 @@
 # Mozilla Add-ons Submission Notes
 
 **Extension Name:** Bookmark Manager Zero
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Developer:** AbsoluteXYZero
-**Repository:** https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero-Webapp
+**Repository:** https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero
 
 ---
 
@@ -69,17 +69,17 @@ All external services are documented in PRIVACY.md. Summary:
 1. **WordPress mshots** (`s0.wp.com`) - Screenshot generation
    - Sends: Bookmark URLs
    - Purpose: Generate preview thumbnails
-   - CSP: Whitelisted in manifest.json:49
+   - CSP: Allowed via `connect-src https:` in manifest.json:57
 
 2. **URLhaus** (`urlhaus.abuse.ch`) - Malware database
    - Sends: Bookmark URLs
    - Purpose: Check for known malware/phishing
-   - CSP: Whitelisted in manifest.json:49
+   - CSP: Allowed via `connect-src https:` in manifest.json:57
 
 3. **BlockList Project** (`blocklistproject.github.io`) - Domain blocklist
    - Sends: Domain names
    - Purpose: Check against known malicious domains
-   - CSP: Whitelisted in manifest.json:49
+   - CSP: Allowed via `connect-src https:` in manifest.json:57
 
 4. **Google Favicons** (`www.google.com/s2/favicons`) - Favicon service
    - Sends: Domain names
@@ -90,12 +90,12 @@ All external services are documented in PRIVACY.md. Summary:
 5. **Google Safe Browsing** (`safebrowsing.googleapis.com`) - Optional
    - Requires manual API key setup
    - User must explicitly request and configure
-   - CSP: Whitelisted in manifest.json:49
+   - CSP: Allowed via `connect-src https:` in manifest.json:57
 
 6. **VirusTotal** (`www.virustotal.com`) - Optional
    - Requires manual API key setup
    - Only used when user explicitly clicks "Check on VirusTotal"
-   - CSP: Whitelisted in manifest.json:49
+   - CSP: Allowed via `connect-src https:` in manifest.json:57
 
 ### Manual Action Only:
 7. **Textise** (`www.textise.net`) - Optional
@@ -105,12 +105,12 @@ All external services are documented in PRIVACY.md. Summary:
 ## Security Measures
 
 ### Content Security Policy
-Strong CSP defined in manifest.json:48-49:
+Strong CSP defined in manifest.json:56-58:
 - `script-src 'self'` - No external scripts
 - `object-src 'none'` - No plugins
 - `form-action 'none'` - No form submissions
 - `frame-ancestors 'none'` - No embedding
-- Whitelist only necessary external domains
+- `connect-src 'self' https: http:` - Allows link checking for bookmark URLs
 
 ### API Key Encryption
 API keys (Google Safe Browsing, VirusTotal) are encrypted before storage:
@@ -132,11 +132,10 @@ API keys (Google Safe Browsing, VirusTotal) are encrypted before storage:
 ## Source Code Review Notes
 
 ### Main Files
-- **sidebar.js** (3300+ lines) - Core extension logic
-- **background.js** - Service worker for link checking
+- **sidebar.js** (4500+ lines) - Core extension logic with inline encryption and validation
+- **background.js** - Service worker for link checking and security scanning
 - **sidebar.html** - UI markup
-- **crypto-utils.js** - Encryption utilities
-- **url-validator.js** - URL validation
+- **icons/** - Extension icons (4 SVG files)
 
 ### No Obfuscation
 - Pure vanilla JavaScript
@@ -195,6 +194,7 @@ Both have generous free tiers suitable for testing.
 
 ## Version History
 
+- **v1.1.0** - Bug fixes & improvements: Fixed link checking (CSP updated), fixed status indicators persisting after operations, fixed preview image restoration, auto-add https:// protocol, updated icons (transparent background), corrected documentation
 - **v1.0.0** - Stable release: private browsing, error handling, export, accessibility, complete documentation, bug fixes
 - **v0.7.0** - Development release with private browsing and error handling
 - **v0.6.x** - Multi-select, keyboard navigation, security features
@@ -203,7 +203,7 @@ Both have generous free tiers suitable for testing.
 ## Contact
 
 For review questions or clarifications:
-- **GitHub Issues:** https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero-Webapp/issues
+- **GitHub Issues:** https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero/issues
 - **Developer:** AbsoluteXYZero
 
 ## Review Checklist

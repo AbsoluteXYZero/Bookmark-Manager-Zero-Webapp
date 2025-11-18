@@ -363,7 +363,7 @@ const checkGoogleSafeBrowsing = async (url) => {
         body: JSON.stringify({
           client: {
             clientId: 'bookmark-manager-zero',
-            clientVersion: '1.0.0'
+            clientVersion: '1.1.0'
           },
           threatInfo: {
             threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
