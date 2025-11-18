@@ -2944,6 +2944,23 @@ async function openAddBookmarkModal() {
   sortCheckbox.checked = sortPref;
   populateFolderDropdown(folderSelect, sortPref);
 
+  // Set default folder - prefer last used, then Bookmarks Menu, then first available
+  const lastUsedFolder = localStorage.getItem('lastBookmarkFolder');
+  if (lastUsedFolder && folderSelect.querySelector(`option[value="${lastUsedFolder}"]`)) {
+    folderSelect.value = lastUsedFolder;
+  } else {
+    // Find Bookmarks Menu folder (usually has 'menu' in the ID)
+    const menuOption = Array.from(folderSelect.options).find(opt =>
+      opt.value.includes('menu') || opt.textContent.toLowerCase().includes('bookmarks menu')
+    );
+    if (menuOption) {
+      folderSelect.value = menuOption.value;
+    } else if (folderSelect.options.length > 1) {
+      // Fallback to first non-root option
+      folderSelect.selectedIndex = 1;
+    }
+  }
+
   // Add event listener for sort checkbox
   sortCheckbox.addEventListener('change', (e) => {
     const sortAlpha = e.target.checked;
@@ -3013,6 +3030,12 @@ async function saveNewBookmark() {
       url,
       parentId
     });
+
+    // Remember the selected folder for next time
+    if (parentId) {
+      localStorage.setItem('lastBookmarkFolder', parentId);
+    }
+
     await loadBookmarks();
     renderBookmarks();
     closeAddBookmarkModal();
@@ -3035,6 +3058,23 @@ function openAddFolderModal() {
   const sortPref = localStorage.getItem('sortFoldersAlphabetically') === 'true';
   sortCheckbox.checked = sortPref;
   populateFolderDropdown(parentSelect, sortPref);
+
+  // Set default folder - prefer last used, then Bookmarks Menu, then first available
+  const lastUsedParent = localStorage.getItem('lastFolderParent');
+  if (lastUsedParent && parentSelect.querySelector(`option[value="${lastUsedParent}"]`)) {
+    parentSelect.value = lastUsedParent;
+  } else {
+    // Find Bookmarks Menu folder (usually has 'menu' in the ID)
+    const menuOption = Array.from(parentSelect.options).find(opt =>
+      opt.value.includes('menu') || opt.textContent.toLowerCase().includes('bookmarks menu')
+    );
+    if (menuOption) {
+      parentSelect.value = menuOption.value;
+    } else if (parentSelect.options.length > 1) {
+      // Fallback to first non-root option
+      parentSelect.selectedIndex = 1;
+    }
+  }
 
   // Add event listener for sort checkbox
   sortCheckbox.addEventListener('change', (e) => {
@@ -3084,6 +3124,12 @@ async function saveNewFolder() {
       type: 'folder',
       parentId
     });
+
+    // Remember the selected parent folder for next time
+    if (parentId) {
+      localStorage.setItem('lastFolderParent', parentId);
+    }
+
     await loadBookmarks();
     renderBookmarks();
     closeAddFolderModal();
