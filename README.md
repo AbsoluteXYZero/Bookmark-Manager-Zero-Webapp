@@ -2,7 +2,7 @@
 
 **A modern, privacy-focused interface for managing your Firefox bookmarks.**
 
-![Version](https://img.shields.io/badge/version-0.7.0-blue)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Firefox](https://img.shields.io/badge/firefox-compatible-orange)
 
@@ -218,17 +218,22 @@ Contributions welcome! Please:
 
 ## Changelog
 
-### v0.7.0 (Current)
-- Added comprehensive private browsing support
-- Implemented global error boundary with logging
-- Added cache size display and auto-clear
-- Enhanced keyboard navigation with arrow keys
-- Multi-select mode with bulk operations
-- Accessibility improvements (ARIA labels, focus traps)
-- Security enhancements
+### v1.0.0 (Current) - Stable Release
+- **Private browsing support** with memory-only storage
+- **Global error boundary** with comprehensive logging
+- **Export bookmarks** as JSON backup
+- **Cache management** with size display and auto-clear
+- **Enhanced keyboard navigation** with arrow keys
+- **Multi-select mode** with bulk operations
+- **Accessibility improvements** (ARIA labels, focus traps, keyboard traps)
+- **Security enhancements** (AES-256-GCM encryption, CSP, input validation)
+- **Complete documentation** for Mozilla Add-ons submission
+- **Bug fixes** including DoH toggle removal and export feature repair
+- No longer in beta - production ready!
 
 ### Previous Versions
-See commit history for detailed changes.
+- **v0.7.0** - Development release with private browsing and error handling
+- See commit history for detailed changes
 
 ## License
 

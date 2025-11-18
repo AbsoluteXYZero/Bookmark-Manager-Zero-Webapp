@@ -1,7 +1,7 @@
 # Mozilla Add-ons Submission Notes
 
 **Extension Name:** Bookmark Manager Zero
-**Version:** 0.7.0
+**Version:** 1.0.0
 **Developer:** AbsoluteXYZero
 **Repository:** https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero-Webapp
 
@@ -195,7 +195,8 @@ Both have generous free tiers suitable for testing.
 
 ## Version History
 
-- **v0.7.0** - Private browsing support, error handling, accessibility improvements
+- **v1.0.0** - Stable release: private browsing, error handling, export, accessibility, complete documentation, bug fixes
+- **v0.7.0** - Development release with private browsing and error handling
 - **v0.6.x** - Multi-select, keyboard navigation, security features
 - **v0.5.x** - Initial release with core bookmark management
 
