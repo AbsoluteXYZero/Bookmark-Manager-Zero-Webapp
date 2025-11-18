@@ -2728,7 +2728,12 @@ async function saveEditModal() {
   const updates = { title: editTitle.value };
 
   if (!isFolder) {
-    updates.url = editUrl.value;
+    let url = editUrl.value.trim();
+    // Add https:// if no protocol is specified
+    if (url && !url.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/)) {
+      url = 'https://' + url;
+    }
+    updates.url = url;
   }
 
   if (isPreviewMode) {
@@ -2896,12 +2901,17 @@ function closeAddBookmarkModal() {
 // Save new bookmark
 async function saveNewBookmark() {
   const title = document.getElementById('newBookmarkTitle').value;
-  const url = document.getElementById('newBookmarkUrl').value;
+  let url = document.getElementById('newBookmarkUrl').value.trim();
   const parentId = document.getElementById('newBookmarkFolder').value || undefined;
 
   if (!url) {
     alert('Please enter a URL');
     return;
+  }
+
+  // Add https:// if no protocol is specified
+  if (!url.match(/^[a-zA-Z][a-zA-Z0-9+.-]*:/)) {
+    url = 'https://' + url;
   }
 
   if (isPreviewMode) {
