@@ -1,10 +1,16 @@
+<div align="center">
+
+<img src="icons/bookmark-96.svg" alt="Bookmark Manager Zero Logo" width="128" height="128">
+
 # Bookmark Manager Zero
 
 **A modern, privacy-focused interface for managing your Firefox bookmarks.**
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Firefox](https://img.shields.io/badge/firefox-compatible-orange)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero/releases)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Firefox](https://img.shields.io/badge/firefox-compatible-orange)](https://addons.mozilla.org/firefox/)
+
+</div>
 
 ## Overview
 
