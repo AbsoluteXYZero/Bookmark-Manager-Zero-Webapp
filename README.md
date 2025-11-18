@@ -91,7 +91,7 @@ Bookmark Manager Zero is a Firefox extension that provides a beautiful, feature-
 ### Organization & Search
 - 🔍 **Advanced Search** - Real-time search across titles and URLs
 - 📁 **Folder Management** - Create, edit, move, and organize folders
-- 🏷️ **Smart Filters** - Filter by dead links, unsafe URLs, duplicates
+- 🏷️ **Smart Filters** - Filter by link status and safety with multi-select support
 - 📊 **List & Grid Views** - Choose your preferred layout
 - 🔄 **Drag & Drop** - Reorder bookmarks and folders
 
@@ -157,10 +157,12 @@ Coming soon - awaiting Mozilla review
 
 ### Search & Filter
 - **Search:** Type in the search bar to filter by title/URL
-- **Filter by Status:** Click the filter icon to show:
-  - Dead Links (404 errors)
-  - Unsafe URLs (flagged by security services)
-  - Duplicates (same URL multiple times)
+- **Filter by Status:** Click the filter icon to show filters:
+  - **Link Status:** Live, Parked, Dead
+  - **Safety Status:** Safe, Suspicious, Unsafe
+- **Multiple Filters:** Select multiple filters simultaneously
+  - Filters in the same category use OR logic (e.g., Live + Dead shows both)
+  - Filters across categories use AND logic (e.g., Live + Safe shows only live AND safe bookmarks)
 
 ### Multi-Select Mode
 1. Click the grid icon to enable multi-select
@@ -339,6 +341,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 - **Issues:** [GitHub Issues](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero/issues)
 - **Source Code:** [GitHub Repository](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero)
+- **Buy Me a Coffee:** [Support Development](https://buymeacoffee.com/absolutexyzero)
 
 ## Acknowledgments
 
