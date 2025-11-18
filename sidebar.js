@@ -2903,19 +2903,13 @@ function setupEventListeners() {
   });
 
   // Theme menu
-  if (themeBtn && themeMenu) {
-    themeBtn.addEventListener('click', (e) => {
-      console.log('Theme button clicked');
-      e.stopPropagation();
-      themeMenu.classList.toggle('show');
-      console.log('Theme menu show class:', themeMenu.classList.contains('show'));
-      if (themeMenu.classList.contains('show')) {
-        adjustDropdownPosition(themeMenu);
-      }
-    });
-  } else {
-    console.error('Theme button or menu not found:', { themeBtn, themeMenu });
-  }
+  themeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    themeMenu.classList.toggle('show');
+    if (themeMenu.classList.contains('show')) {
+      adjustDropdownPosition(themeMenu);
+    }
+  });
 
   // Theme selection
   themeMenu.querySelectorAll('.action-btn').forEach(btn => {
@@ -2927,19 +2921,13 @@ function setupEventListeners() {
   });
 
   // View menu
-  if (viewBtn && viewMenu) {
-    viewBtn.addEventListener('click', (e) => {
-      console.log('View button clicked');
-      e.stopPropagation();
-      viewMenu.classList.toggle('show');
-      console.log('View menu show class:', viewMenu.classList.contains('show'));
-      if (viewMenu.classList.contains('show')) {
-        adjustDropdownPosition(viewMenu);
-      }
-    });
-  } else {
-    console.error('View button or menu not found:', { viewBtn, viewMenu });
-  }
+  viewBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    viewMenu.classList.toggle('show');
+    if (viewMenu.classList.contains('show')) {
+      adjustDropdownPosition(viewMenu);
+    }
+  });
 
   // View selection
   viewMenu.querySelectorAll('.action-btn').forEach(btn => {
@@ -2951,19 +2939,13 @@ function setupEventListeners() {
   });
 
   // Zoom menu
-  if (zoomBtn && zoomMenu) {
-    zoomBtn.addEventListener('click', (e) => {
-      console.log('Zoom button clicked');
-      e.stopPropagation();
-      zoomMenu.classList.toggle('show');
-      console.log('Zoom menu show class:', zoomMenu.classList.contains('show'));
-      if (zoomMenu.classList.contains('show')) {
-        adjustDropdownPosition(zoomMenu);
-      }
-    });
-  } else {
-    console.error('Zoom button or menu not found:', { zoomBtn, zoomMenu });
-  }
+  zoomBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    zoomMenu.classList.toggle('show');
+    if (zoomMenu.classList.contains('show')) {
+      adjustDropdownPosition(zoomMenu);
+    }
+  });
 
   // Zoom slider
   zoomSlider.addEventListener('input', (e) => {
