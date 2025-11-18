@@ -7,7 +7,7 @@
     "gecko": {
       "id": "firefox.unopened558@slmail.me",
       "data_collection_permissions": {
-        "collection_enabled": false
+        "required": false
       }
     }
   },
