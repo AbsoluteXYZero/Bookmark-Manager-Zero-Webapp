@@ -5,7 +5,10 @@
   "description": "A modern interface for the native Firefox bookmark manager.",
   "browser_specific_settings": {
     "gecko": {
-      "id": "firefox.unopened558@slmail.me"
+      "id": "firefox.unopened558@slmail.me",
+      "data_collection_permissions": {
+        "collection_enabled": false
+      }
     }
   },
   "permissions": [
