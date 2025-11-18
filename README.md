@@ -6,7 +6,7 @@
 
 **A modern, privacy-focused interface for managing your Firefox bookmarks.**
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Firefox](https://img.shields.io/badge/firefox-compatible-orange)](https://addons.mozilla.org/firefox/)
 
@@ -284,7 +284,15 @@ Contributions welcome! Please:
 
 ## Changelog
 
-### v1.2.0 (Current) - Export Improvements & Code Cleanup
+### v1.3.0 (Current) - Multiple Filters & Support
+
+**New Features:**
+- 🏷️ **Multiple Filter Selection** - Select multiple filters simultaneously for advanced filtering
+  - OR logic within categories (e.g., Live + Dead shows both)
+  - AND logic between categories (e.g., Live + Safe shows only live AND safe)
+- ☕ **Buy Me a Coffee** - Added support link in settings menu
+
+### v1.2.0 - Export Improvements & Code Cleanup
 
 **New Features:**
 - 📤 **HTML/JSON Export Choice** - Users can now choose between HTML (cross-browser compatible) or JSON (Firefox native) export formats

@@ -1,4 +1,4 @@
-BOOKMARK MANAGER ZERO v1.2.0 - Submission Notes
+BOOKMARK MANAGER ZERO v1.3.0 - Submission Notes
 Repository: https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero
 
 ## PERMISSIONS
@@ -60,6 +60,7 @@ Free API keys (optional):
 
 ## VERSIONS
 
+v1.3.0 - Multiple filter selection, Buy Me a Coffee support
 v1.2.0 - HTML/JSON export, code cleanup
 v1.1.0 - Fixed link checking, status indicators
 v1.0.0 - Stable: private browsing, export, accessibility
