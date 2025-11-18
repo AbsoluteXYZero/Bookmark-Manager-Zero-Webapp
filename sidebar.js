@@ -2726,15 +2726,41 @@ async function handleBookmarkAction(action, bookmark) {
               windowId: privateWindow.id
             });
           } else {
-            // Create new private window
-            await browser.windows.create({
-              url: bookmark.url,
-              incognito: true
-            });
+            // Firefox doesn't allow extensions to create private windows programmatically
+            // Inform user to open a private window manually
+            const confirmed = confirm(
+              '🔒 Firefox requires you to open a private window manually first.\n\n' +
+              'Would you like to copy the URL to your clipboard so you can paste it in a private window?\n\n' +
+              'Tip: Press Ctrl+Shift+P to open a new private window in Firefox.'
+            );
+
+            if (confirmed) {
+              // Copy URL to clipboard
+              try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                  await navigator.clipboard.writeText(bookmark.url);
+                  alert('✓ URL copied to clipboard!\n\nNow open a private window (Ctrl+Shift+P) and paste the URL.');
+                } else {
+                  // Fallback
+                  const textArea = document.createElement('textarea');
+                  textArea.value = bookmark.url;
+                  textArea.style.position = 'fixed';
+                  textArea.style.left = '-999999px';
+                  document.body.appendChild(textArea);
+                  textArea.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(textArea);
+                  alert('✓ URL copied to clipboard!\n\nNow open a private window (Ctrl+Shift+P) and paste the URL.');
+                }
+              } catch (copyError) {
+                console.error('Error copying URL:', copyError);
+                alert(`Could not copy URL. Here it is:\n\n${bookmark.url}`);
+              }
+            }
           }
         } catch (error) {
           console.error('Error opening private tab:', error);
-          alert('Failed to open in private window. Make sure private browsing is enabled in Firefox settings.');
+          alert('Failed to access private windows. The extension may not have permission to work with private windows.');
         }
       }
       break;
