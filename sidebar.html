@@ -261,8 +261,14 @@
       z-index: 2;
     }
 
+    /* Disable hover transform when menu is open to prevent position shifts */
     .bookmark-item:has(.bookmark-actions.show) {
       z-index: 10000;
+      transform: none;
+    }
+
+    .bookmark-item:has(.bookmark-actions.show):hover {
+      transform: none;
     }
 
     .bookmark-item:active {
@@ -624,7 +630,7 @@
       justify-content: center;
       border-radius: 8px;
       margin: -10px 0;
-      margin-right: -12px;
+      margin-right: 0;
     }
 
     .bookmark-item:hover .bookmark-preview-container {
