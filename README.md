@@ -40,7 +40,7 @@ Bookmark Manager Zero is a Firefox extension that provides a beautiful, feature-
 - 🗑️ **Auto-Clear Cache** - Configurable automatic cache cleanup
 
 ### User Experience
-- 🎨 **8 Color Themes** - Blue, Purple, Green, Red, Orange, Pink, Teal, Yellow (each with dark mode)
+- 🎨 **3 Themes** - Blue Dark (default), Light, Dark
 - ⌨️ **Keyboard Navigation** - Full keyboard support with arrow keys
 - ♿ **Accessibility** - Comprehensive ARIA labels and keyboard traps
 - 🔍 **Zoom Control** - 50% - 200% zoom levels
@@ -99,7 +99,7 @@ Coming soon - awaiting Mozilla review
 Click the gear icon to access:
 - **Display Options:** Toggle title, URL, status indicators, previews
 - **View Mode:** Switch between list and grid layouts
-- **Theme:** Choose from 8 color themes
+- **Theme:** Choose from 3 themes
 - **Zoom:** Adjust interface size
 - **Cache Management:** Configure auto-clear settings
 - **API Keys:** Set up optional security API keys
