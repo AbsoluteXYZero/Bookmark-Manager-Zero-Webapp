@@ -1541,6 +1541,14 @@ function createBookmarkElement(bookmark) {
         </span>
         <span>Check on VirusTotal</span>
       </button>
+      <button class="action-btn" data-action="copy-url">
+        <span class="icon">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
+          </svg>
+        </span>
+        <span>Copy URL</span>
+      </button>
       <button class="action-btn" data-action="edit">
         <span class="icon">
           <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
@@ -2787,6 +2795,36 @@ async function handleBookmarkAction(action, bookmark) {
         console.error('Error opening VirusTotal:', error);
         alert('Failed to open VirusTotal. Invalid URL.');
       }
+      break;
+
+    case 'copy-url':
+      // Copy URL to clipboard
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(bookmark.url);
+          // Show brief success feedback
+          console.log('URL copied to clipboard:', bookmark.url);
+          // Optional: Could show a toast notification here
+        } else {
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = bookmark.url;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          console.log('URL copied to clipboard (fallback):', bookmark.url);
+        }
+      } catch (error) {
+        console.error('Error copying URL:', error);
+        alert('Failed to copy URL to clipboard.');
+      }
+      break;
+
+    case 'edit':
+      openEditModal(bookmark, false);
       break;
 
     case 'delete':
