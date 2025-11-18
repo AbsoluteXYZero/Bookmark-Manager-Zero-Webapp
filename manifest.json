@@ -3,6 +3,11 @@
   "name": "Bookmark Manager Zero",
   "version": "1.0.0",
   "description": "A modern interface for the native Firefox bookmark manager.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "bookmark-manager-zero@absolutexyzero.com"
+    }
+  },
   "permissions": [
     "bookmarks",
     "storage",
