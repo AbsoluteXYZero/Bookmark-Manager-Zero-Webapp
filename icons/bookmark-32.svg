@@ -1,36 +1,13 @@
 <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
-      <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#4ade80;stop-opacity:0.2" />
-      <stop offset="100%" style="stop-color:#22c55e;stop-opacity:0.4" />
-    </linearGradient>
-  </defs>
-
-  <!-- Outer glow -->
-  <path d="M24 4L8 10v10c0 10 7 19 16 22 9-3 16-12 16-22V10L24 4z"
-        fill="url(#shieldGradient)"
-        opacity="0.3"/>
-
   <!-- Shield shape -->
   <path d="M24 4L8 10v10c0 10 7 19 16 22 9-3 16-12 16-22V10L24 4z"
         stroke="#22c55e"
         stroke-width="2"
-        fill="#1a1a1a"
-        filter="url(#glow)"/>
+        fill="#1a1a1a"/>
 
   <!-- Bookmark icon -->
   <path d="M20 16h8c1.1 0 2 .9 2 2v14l-6-3-6 3V18c0-1.1.9-2 2-2z"
         fill="#4ade80"
-        filter="url(#glow)"/>
-  <path d="M20 16h8c1.1 0 2 .9 2 2v14l-6-3-6 3V18c0-1.1.9-2 2-2z"
         stroke="#22c55e"
-        stroke-width="1.5"
-        fill="none"/>
+        stroke-width="1.5"/>
 </svg>

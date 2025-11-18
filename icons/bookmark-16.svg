@@ -1,20 +1,9 @@
 <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
-      <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-  </defs>
-
   <!-- Shield shape -->
   <path d="M24 4L8 10v10c0 10 7 19 16 22 9-3 16-12 16-22V10L24 4z"
         stroke="#22c55e"
         stroke-width="2"
-        fill="#1a1a1a"
-        filter="url(#glow)"/>
+        fill="#1a1a1a"/>
 
   <!-- Bookmark icon -->
   <path d="M20 16h8c1.1 0 2 .9 2 2v14l-6-3-6 3V18c0-1.1.9-2 2-2z"
