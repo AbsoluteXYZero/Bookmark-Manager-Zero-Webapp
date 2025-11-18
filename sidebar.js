@@ -2714,10 +2714,28 @@ async function handleBookmarkAction(action, bookmark) {
       if (isPreviewMode) {
         alert('🔒 In the Firefox extension, this would open the bookmark in a private tab.');
       } else {
-        browser.windows.create({
-          url: bookmark.url,
-          incognito: true
-        });
+        try {
+          // Try to find an existing private window
+          const windows = await browser.windows.getAll();
+          const privateWindow = windows.find(w => w.incognito);
+
+          if (privateWindow) {
+            // Open tab in existing private window
+            await browser.tabs.create({
+              url: bookmark.url,
+              windowId: privateWindow.id
+            });
+          } else {
+            // Create new private window
+            await browser.windows.create({
+              url: bookmark.url,
+              incognito: true
+            });
+          }
+        } catch (error) {
+          console.error('Error opening private tab:', error);
+          alert('Failed to open in private window. Make sure private browsing is enabled in Firefox settings.');
+        }
       }
       break;
 
