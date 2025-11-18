@@ -2886,8 +2886,19 @@ function buildFolderList(nodes, indent = 0) {
 }
 
 // Populate folder dropdown
-function populateFolderDropdown(selectElement) {
-  const folders = buildFolderList(bookmarkTree);
+function populateFolderDropdown(selectElement, sortAlphabetically = false) {
+  let folders = buildFolderList(bookmarkTree);
+
+  // Sort alphabetically if requested
+  if (sortAlphabetically) {
+    folders.sort((a, b) => {
+      // Remove indentation for comparison
+      const titleA = a.title.trim().toLowerCase();
+      const titleB = b.title.trim().toLowerCase();
+      return titleA.localeCompare(titleB);
+    });
+  }
+
   selectElement.innerHTML = '<option value="">Root</option>';
   folders.forEach(folder => {
     const option = document.createElement('option');
@@ -2927,7 +2938,18 @@ async function openAddBookmarkModal() {
     urlInput.value = 'https://example.com/current-page';
   }
 
-  populateFolderDropdown(folderSelect);
+  // Load sort preference and populate dropdown
+  const sortCheckbox = document.getElementById('sortBookmarkFoldersAlpha');
+  const sortPref = localStorage.getItem('sortFoldersAlphabetically') === 'true';
+  sortCheckbox.checked = sortPref;
+  populateFolderDropdown(folderSelect, sortPref);
+
+  // Add event listener for sort checkbox
+  sortCheckbox.addEventListener('change', (e) => {
+    const sortAlpha = e.target.checked;
+    localStorage.setItem('sortFoldersAlphabetically', sortAlpha);
+    populateFolderDropdown(folderSelect, sortAlpha);
+  });
 
   modal.classList.remove('hidden');
   modal.setAttribute('aria-hidden', 'false');
@@ -3001,7 +3023,19 @@ function openAddFolderModal() {
   const parentSelect = document.getElementById('newFolderParent');
 
   nameInput.value = '';
-  populateFolderDropdown(parentSelect);
+
+  // Load sort preference and populate dropdown
+  const sortCheckbox = document.getElementById('sortFolderParentsAlpha');
+  const sortPref = localStorage.getItem('sortFoldersAlphabetically') === 'true';
+  sortCheckbox.checked = sortPref;
+  populateFolderDropdown(parentSelect, sortPref);
+
+  // Add event listener for sort checkbox
+  sortCheckbox.addEventListener('change', (e) => {
+    const sortAlpha = e.target.checked;
+    localStorage.setItem('sortFoldersAlphabetically', sortAlpha);
+    populateFolderDropdown(parentSelect, sortAlpha);
+  });
 
   modal.classList.remove('hidden');
   modal.setAttribute('aria-hidden', 'false');
