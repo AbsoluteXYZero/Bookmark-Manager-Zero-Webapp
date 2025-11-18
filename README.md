@@ -4,17 +4,17 @@
 
 # Bookmark Manager Zero
 
-**A modern, privacy-focused interface for managing your Firefox bookmarks.**
+**A modern, privacy-focused interface for managing your Chrome bookmarks.**
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero/releases)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/AsbsoluteXYZero/Bookmark-Manager-Zero-Chrome/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Firefox](https://img.shields.io/badge/firefox-compatible-orange)](https://addons.mozilla.org/firefox/)
+[![Chrome](https://img.shields.io/badge/chrome-compatible-blue)](https://chrome.google.com/webstore/)
 
 </div>
 
 ## Overview
 
-Bookmark Manager Zero is a Firefox extension that provides a beautiful, feature-rich sidebar interface for managing your native Firefox bookmarks. It enhances your bookmark management experience with modern UI, advanced search, safety checking, and intelligent organization tools.
+Bookmark Manager Zero is a Chrome extension that provides a beautiful, feature-rich side panel interface for managing your native Chrome bookmarks. It enhances your bookmark management experience with modern UI, advanced search, safety checking, and intelligent organization tools.
 
 ### Why Bookmark Manager Zero?
 
@@ -22,16 +22,16 @@ Bookmark Manager Zero is a Firefox extension that provides a beautiful, feature-
 
 Other bookmark tools make you choose between organization OR security. Bookmark Manager Zero combines both:
 
-| Feature | Bookmark Manager Zero | [Bookmarks clean up](https://addons.mozilla.org/firefox/addon/bookmarks-clean-up/) | [Bookmarks Organizer](https://addons.mozilla.org/firefox/addon/bookmarks-organizer/) | [Malware & URL Scanner](https://chromewebstore.google.com/detail/pinkddkghldnoglcngpeolboghcbenfh) |
-|---------|:--------------------:|:------------------:|:-------------------:|:---------------------:|
-| Modern bookmark UI | ✅ | ❌ | ❌ | ❌ |
-| Dead link detection | ✅ | ✅ | ✅ | ❌ |
-| Parked domain detection | ✅ | ❌ | ❌ | ❌ |
-| Multi-source malware scanning | ✅ | ❌ | ❌ | ✅ |
-| Safety indicators on bookmarks | ✅ | ❌ | ❌ | ❌ |
-| Suspicious pattern detection | ✅ | ❌ | ❌ | ❌ |
-| No tracking/analytics | ✅ | ✅ | ✅ | ❌ |
-| Website previews | ✅ | ❌ | ❌ | ❌ |
+| Feature | Bookmark Manager Zero | [Bookmark Sidebar](https://chrome.google.com/webstore/detail/bookmark-sidebar/jdbnofccmhefkmjbkkdkfiicjkgofkdh) | [Sidebarr](https://chrome.google.com/webstore/detail/sidebarr/lknanmhbcjohhgfhgaaoopbalhfcpjnl) |
+|---------|:--------------------:|:------------------:|:-------------------:|
+| Modern bookmark UI | ✅ | ✅ | ✅ |
+| Dead link detection | ✅ | ❌ | ❌ |
+| Parked domain detection | ✅ | ❌ | ❌ |
+| Multi-source malware scanning | ✅ | ❌ | ❌ |
+| Safety indicators on bookmarks | ✅ | ❌ | ❌ |
+| Suspicious pattern detection | ✅ | ❌ | ❌ |
+| No tracking/analytics | ✅ | ❌ | ❌ |
+| Website previews | ✅ | ❌ | ❌ |
 
 Stop blindly clicking old bookmarks. Know which links are dead, parked, or potentially dangerous before you visit them.
 
@@ -95,17 +95,17 @@ Stop blindly clicking old bookmarks. Know which links are dead, parked, or poten
   </tr>
 </table>
 
-*Click any image to view full resolution. All screenshots show the extension running in Firefox.*
+*Click any image to view full resolution. All screenshots show the extension running in Chrome.*
 
 </div>
 
 ## Features
 
 ### Core Functionality
-- ✅ **Native Bookmark Integration** - Works directly with Firefox's bookmark system
+- ✅ **Native Bookmark Integration** - Works directly with Chrome's bookmark system
 - ✅ **Modern Material Design UI** - Clean, intuitive interface with multiple themes
-- ✅ **Sidebar Interface** - Quick access via toolbar icon or customizable keyboard shortcut
-- ✅ **Real-time Sync** - Instantly reflects bookmark changes made in Firefox
+- ✅ **Side Panel Interface** - Quick access via toolbar icon
+- ✅ **Real-time Sync** - Instantly reflects bookmark changes made in Chrome
 
 ### Organization & Search
 - 🔍 **Advanced Search** - Real-time search across titles and URLs
@@ -119,10 +119,8 @@ Stop blindly clicking old bookmarks. Know which links are dead, parked, or poten
 - 🛡️ **Security Scanning** - Checks URLs against malware databases
 - ⚠️ **Safety Indicators** - Visual warnings for suspicious links
 - ✅ **Whitelist Support** - Mark trusted URLs to skip safety checks
-- 📜 **Safety History** - Track status changes over time
 
 ### Privacy & Security
-- 🔒 **Private Browsing Support** - Respects incognito mode with memory-only storage
 - 🔐 **Encrypted API Keys** - AES-256-GCM encryption for stored credentials
 - 🚫 **No Tracking** - Zero analytics, no data collection
 - 🌐 **Offline Mode** - Works fully offline when external features disabled
@@ -133,7 +131,7 @@ Stop blindly clicking old bookmarks. Know which links are dead, parked, or poten
 - ⌨️ **Keyboard Navigation** - Full keyboard support with arrow keys
 - ♿ **Accessibility** - Comprehensive ARIA labels and keyboard traps
 - 🔍 **Zoom Control** - 50% - 200% zoom levels
-- 📱 **Responsive Design** - Adapts to sidebar width
+- 📱 **Responsive Design** - Adapts to side panel width
 
 ### Advanced Features
 - 🖼️ **Website Previews** - Screenshot thumbnails of bookmarks
@@ -145,27 +143,26 @@ Stop blindly clicking old bookmarks. Know which links are dead, parked, or poten
 
 ## Installation
 
-### From Mozilla Add-ons (Recommended)
-Coming soon - awaiting Mozilla review
+### From Chrome Web Store (Recommended)
+Coming soon - awaiting Chrome review
 
 ### Manual Installation (Developer Mode)
 1. Clone this repository:
    ```bash
-   git clone https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero.git
+   git clone https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero-Chrome.git
    ```
-2. Open Firefox and navigate to `about:debugging`
-3. Click "This Firefox" → "Load Temporary Add-on"
-4. Select `manifest.json` from the cloned directory
+2. Open Chrome and navigate to `chrome://extensions`
+3. Enable "Developer mode" (toggle in top right)
+4. Click "Load unpacked"
+5. Select the cloned directory
 
 ## Usage
 
 ### Basic Usage
-1. Open the sidebar: Click the toolbar icon (bookmark icon in Firefox toolbar)
+1. Open the side panel: Click the toolbar icon (bookmark icon in Chrome toolbar)
 2. Browse your bookmarks in the organized folder structure
 3. Click any bookmark to open it in a new tab
 4. Use the search bar to find specific bookmarks
-
-**Note:** You can set a custom keyboard shortcut in Firefox Settings → Extensions & Themes → Manage Extension Shortcuts
 
 ### Managing Bookmarks
 - **Add Bookmark:** Click the "+" button in the header
@@ -199,9 +196,6 @@ Click the gear icon to access:
 
 ### Keyboard Shortcuts
 
-#### Global
-- Sidebar toggle - Can be customized in Firefox (Settings → Extensions & Themes → Manage Extension Shortcuts)
-
 #### Navigation (when item selected)
 - `↑/↓` - Navigate bookmarks
 - `←/→` - Collapse/expand folders or show/hide previews
@@ -216,7 +210,6 @@ Bookmark Manager Zero respects your privacy:
 - **No tracking or analytics**
 - **No advertisements**
 - **Open source** - audit the code yourself
-- **Private browsing support** - memory-only storage in incognito mode
 
 See [PRIVACY.md](PRIVACY.md) for complete privacy policy.
 
@@ -341,7 +334,6 @@ If all above checks pass, the URL is analyzed for suspicious patterns:
 - Only URLs are sent to external services (no personal data)
 - API keys are encrypted with AES-256-GCM before storage
 - All features can be disabled in settings
-- In private browsing, cache uses memory only (no disk writes)
 
 ---
 
@@ -355,9 +347,10 @@ Users can whitelist specific URLs to:
 ## Permissions
 
 ### Required Permissions
-- `bookmarks` - Read and manage your Firefox bookmarks
+- `bookmarks` - Read and manage your Chrome bookmarks
 - `storage` - Save preferences and cache locally
 - `tabs` - Open bookmarks in tabs
+- `sidePanel` - Display the side panel interface
 
 ### Optional Permissions
 - `<all_urls>` - Check if bookmark links are still working
@@ -369,17 +362,17 @@ Users can whitelist specific URLs to:
 ### Project Structure
 ```
 ├── manifest.json          # Extension manifest
-├── sidebar.html          # Main UI
-├── sidebar.js            # Core logic (encryption, validation, UI)
-├── background.js         # Background service worker
-├── icons/                # Extension icons
-└── PRIVACY.md           # Privacy policy
+├── sidepanel.html         # Main UI
+├── sidepanel.js           # Core logic (encryption, validation, UI)
+├── background.js          # Background service worker
+├── icons/                 # Extension icons
+└── PRIVACY.md            # Privacy policy
 ```
 
 ### Key Technologies
 - Vanilla JavaScript (no frameworks)
 - Material Design 3 color system
-- Firefox WebExtensions API
+- Chrome Extensions API (Manifest V3)
 - AES-256-GCM encryption for API keys
 - CSS Grid & Flexbox
 
@@ -401,8 +394,9 @@ Please report security vulnerabilities via GitHub Issues (mark as security issue
 
 ## Browser Compatibility
 
-- **Firefox:** ✅ Fully supported (Manifest V3)
-- **Chrome/Edge:** ❌ Not compatible (Firefox-specific APIs)
+- **Chrome:** ✅ Fully supported (Manifest V3)
+- **Edge:** ✅ Should work (Chromium-based)
+- **Firefox:** ❌ Use [Firefox version](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero)
 
 ## Roadmap
 
@@ -419,62 +413,19 @@ Contributions welcome! Please:
 
 ## Changelog
 
-### v1.3.0 (Current) - Multiple Filters & Support
+### v1.3.0 (Current) - Chrome Port
 
 **New Features:**
+- 🌐 **Chrome Support** - Ported from Firefox to Chrome using Side Panel API
 - 🏷️ **Multiple Filter Selection** - Select multiple filters simultaneously for advanced filtering
   - OR logic within categories (e.g., Live + Dead shows both)
   - AND logic between categories (e.g., Live + Safe shows only live AND safe)
 - ☕ **Buy Me a Coffee** - Added support link in settings menu
 
-### v1.2.0 - Export Improvements & Code Cleanup
-
-**New Features:**
-- 📤 **HTML/JSON Export Choice** - Users can now choose between HTML (cross-browser compatible) or JSON (Firefox native) export formats
-- 📋 **Netscape Bookmark Format** - HTML exports use standard format compatible with all major browsers
-
-**Improvements:**
-- 🧹 **Code Cleanup** - Removed legacy duplicate files (crypto-utils.js, url-validator.js)
-- 📖 **Enhanced Documentation** - Added comprehensive acknowledgments for security services (URLhaus, BlockList Project, Google Safe Browsing, VirusTotal)
-- 🔒 **Removed Private Tab Feature** - Eliminated confusing Firefox API limitation issues
-
-**Bug Fixes:**
-- Fixed incognito manifest setting for Firefox compatibility
-
-### v1.1.0 - Bug Fixes & Improvements
-
-**Critical Fixes:**
-- 🔧 **Fixed link checking feature** - Content Security Policy updated to allow URL checking for all bookmark URLs (previously blocked by overly restrictive CSP)
-- 🔧 **Fixed status indicators persisting** - Link and safety check results no longer reset to grey after bookmark operations (add/edit/delete)
-- 🔧 **Fixed preview images not restoring** - Preview thumbnails now properly restore after status checks complete
-
-**Improvements:**
-- ✨ **Auto-add https:// protocol** - Bookmarks can now be saved without typing protocol (e.g., "google.com" → "https://google.com")
-- 🎨 **Updated extension icons** - Removed black background square, cleaner transparent design with black-filled shield
-- 📝 **Corrected documentation** - Fixed theme count (3 themes, not 8) in README and release notes
-
-**Technical Details:**
-- CSP `connect-src` changed from specific domains to `https: http:` to enable link checking
-- Status data now preserved across `loadBookmarks()` calls using Map-based caching
-- Preview tracking key changed from `bookmark.id` to `bookmark.url` for consistency
-- Protocol detection regex: `^[a-zA-Z][a-zA-Z0-9+.-]*:` handles all valid URL schemes
-
-### v1.0.0 - Stable Release
-- **Private browsing support** with memory-only storage
-- **Global error boundary** with comprehensive logging
-- **Export bookmarks** as JSON backup
-- **Cache management** with size display and auto-clear
-- **Enhanced keyboard navigation** with arrow keys
-- **Multi-select mode** with bulk operations
-- **Accessibility improvements** (ARIA labels, focus traps, keyboard traps)
-- **Security enhancements** (AES-256-GCM encryption, CSP, input validation)
-- **Complete documentation** for Mozilla Add-ons submission
-- **Bug fixes** including DoH toggle removal and export feature repair
-- No longer in beta - production ready!
-
-### Previous Versions
-- **v0.7.0** - Development release with private browsing and error handling
-- See commit history for detailed changes
+**Changes from Firefox version:**
+- Uses Chrome Side Panel API instead of Firefox Sidebar
+- Removed Firefox-specific saveAsPDF feature (use Ctrl+P instead)
+- Uses Chrome storage and bookmarks APIs
 
 ## License
 
@@ -482,15 +433,15 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- **Issues:** [GitHub Issues](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero/issues)
-- **Source Code:** [GitHub Repository](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero)
+- **Issues:** [GitHub Issues](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero-Chrome/issues)
+- **Source Code:** [GitHub Repository](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero-Chrome)
 - **Buy Me a Coffee:** [Support Development](https://buymeacoffee.com/absolutexyzero)
 
 ## Acknowledgments
 
 ### Design & Platform
 - **Material Design 3** - Color system by Google
-- **Firefox WebExtensions** - Mozilla Firefox team
+- **Chrome Extensions** - Google Chrome team
 
 ### Security & Malware Detection
 - **[URLhaus](https://urlhaus.abuse.ch/)** - Malware URL database by abuse.ch
@@ -506,4 +457,4 @@ Special thanks to the security research community for maintaining free, public m
 
 ---
 
-**Made with ❤️ for Firefox users who love organized bookmarks**
+**Made with ❤️ for Chrome users who love organized bookmarks**

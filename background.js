@@ -36,7 +36,7 @@ async function decryptApiKey(encrypted) {
 }
 
 async function getDecryptedApiKey(keyName) {
-  const result = await browser.storage.local.get(keyName);
+  const result = await chrome.storage.local.get(keyName);
   if (result[keyName]) {
     return await decryptApiKey(result[keyName]);
   }
@@ -107,7 +107,7 @@ const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 // Get cached result if valid
 const getCachedResult = async (url, cacheKey) => {
   try {
-    const cache = await browser.storage.local.get(cacheKey);
+    const cache = await chrome.storage.local.get(cacheKey);
     if (cache[cacheKey]) {
       const cached = cache[cacheKey][url];
       if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
@@ -123,13 +123,13 @@ const getCachedResult = async (url, cacheKey) => {
 // Store result in cache
 const setCachedResult = async (url, result, cacheKey) => {
   try {
-    const cache = await browser.storage.local.get(cacheKey);
+    const cache = await chrome.storage.local.get(cacheKey);
     const cacheData = cache[cacheKey] || {};
     cacheData[url] = {
       result,
       timestamp: Date.now()
     };
-    await browser.storage.local.set({ [cacheKey]: cacheData });
+    await chrome.storage.local.set({ [cacheKey]: cacheData });
   } catch (e) {
     console.warn('Cache write error:', e);
   }
@@ -336,7 +336,7 @@ const BLOCKLIST_SOURCES = [
 // Check URL using Google Safe Browsing API (fallback/redundancy check)
 // Get a free API key at: https://developers.google.com/safe-browsing/v4/get-started
 // Free tier: 10,000 requests per day
-// API key is stored in browser.storage.local.googleSafeBrowsingApiKey
+// API key is stored in chrome.storage.local.googleSafeBrowsingApiKey
 const checkGoogleSafeBrowsing = async (url) => {
   try {
     // Get encrypted API key from storage and decrypt it
@@ -402,7 +402,7 @@ const checkGoogleSafeBrowsing = async (url) => {
 // Check URL using VirusTotal API
 // Get a free API key at: https://www.virustotal.com/gui/my-apikey
 // Free tier: 500 requests per day, 4 requests per minute
-// API key is stored in browser.storage.local.virusTotalApiKey
+// API key is stored in chrome.storage.local.virusTotalApiKey
 const checkVirusTotal = async (url) => {
   try {
     // Get encrypted API key from storage and decrypt it
@@ -631,7 +631,7 @@ const updateBlocklistDatabase = async () => {
     console.log(`[Blocklist] Sources: URLhaus + BlockList Project (Malware, Phishing, Scam)`);
 
     // Store update timestamp
-    await browser.storage.local.set({
+    await chrome.storage.local.set({
       blocklistLastUpdate: blocklistLastUpdate
     });
 
@@ -759,7 +759,7 @@ const checkURLSafety = async (url) => {
     console.log(`[Blocklist] ✓ Neither full URL nor domain found in malicious database`);
 
     // Blocklists say safe - check Google Safe Browsing and VirusTotal as redundancy if API keys are configured
-    const storage = await browser.storage.local.get(['googleSafeBrowsingApiKey', 'virusTotalApiKey']);
+    const storage = await chrome.storage.local.get(['googleSafeBrowsingApiKey', 'virusTotalApiKey']);
     const hasGoogleKey = storage.googleSafeBrowsingApiKey && storage.googleSafeBrowsingApiKey.trim() !== '';
     const hasVTKey = storage.virusTotalApiKey && storage.virusTotalApiKey.trim() !== '';
 
@@ -818,7 +818,7 @@ const checkURLSafety = async (url) => {
 };
 
 // Listen for messages from the frontend
-browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "checkLinkStatus") {
     // Validate URL before checking
     const safeUrl = sanitizeUrl(request.url);
@@ -866,25 +866,19 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === "openReaderView") {
-    const readerUrl = browser.runtime.getURL(`reader.html?url=${encodeURIComponent(request.url)}`);
-    browser.tabs.create({ url: readerUrl });
+    const readerUrl = chrome.runtime.getURL(`reader.html?url=${encodeURIComponent(request.url)}`);
+    chrome.tabs.create({ url: readerUrl });
     // This message doesn't need a response.
   }
 
   if (request.action === "openPrintView") {
-    const printUrl = browser.runtime.getURL(`print.html?url=${encodeURIComponent(request.url)}`);
-    browser.tabs.create({ url: printUrl });
+    const printUrl = chrome.runtime.getURL(`print.html?url=${encodeURIComponent(request.url)}`);
+    chrome.tabs.create({ url: printUrl });
     // This message doesn't need a response.
   }
 });
 
 
-// Handles the browser action (clicking the toolbar icon)
-// When clicked, toggle the sidebar
-try {
-  browser.action.onClicked.addListener(() => {
-    browser.sidebarAction.toggle();
-  });
-} catch (error) {
-  console.error("Error setting up browser action listener:", error);
-}
+// Set up Side Panel to open when clicking the action icon
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true })
+  .catch((error) => console.error("Error setting up side panel behavior:", error));

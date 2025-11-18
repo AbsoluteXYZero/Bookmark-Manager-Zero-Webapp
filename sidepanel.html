@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Bookmark Manager Zero</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --md-sys-color-primary: #6366f1;
+      --md-sys-color-on-primary: #ffffff;
+      --md-sys-color-primary-container: #e0e7ff;
+      --md-sys-color-on-primary-container: #1e1b4b;
+      --md-sys-color-secondary: #818cf8;
+      --md-sys-color-surface: #fefefe;
+      --md-sys-color-surface-variant: #f1f5f9;
+      --md-sys-color-surface-container: #e2e8f0;
+      --md-sys-color-surface-container-high: #cbd5e1;
+      --md-sys-color-on-surface: #0f172a;
+      --md-sys-color-on-surface-variant: #475569;
+      --md-sys-color-outline: #94a3b8;
+      --md-sys-color-outline-variant: #cbd5e1;
+      --md-sys-color-error: #ef4444;
+      --md-sys-color-success: #10b981;
+      --md-sys-color-warning: #f59e0b;
+      --md-elevation-1: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --md-elevation-2: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --md-elevation-3: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
+
+    /* Blue Dark Theme (Default) */
+    .blue-dark {
+      --md-sys-color-primary: #818cf8;
+      --md-sys-color-on-primary: #1e1b4b;
+      --md-sys-color-primary-container: #312e81;
+      --md-sys-color-on-primary-container: #e0e7ff;
+      --md-sys-color-secondary: #a5b4fc;
+      --md-sys-color-surface: #0f172a;
+      --md-sys-color-surface-variant: #1e293b;
+      --md-sys-color-surface-container: #334155;
+      --md-sys-color-surface-container-high: #475569;
+      --md-sys-color-on-surface: #f1f5f9;
+      --md-sys-color-on-surface-variant: #cbd5e1;
+      --md-sys-color-outline: #64748b;
+      --md-sys-color-outline-variant: #475569;
+      --md-elevation-1: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+      --md-elevation-2: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+      --md-elevation-3: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+    }
+
+    /* Pure Dark Theme */
+    .dark {
+      --md-sys-color-primary: #bb86fc;
+      --md-sys-color-on-primary: #3700b3;
+      --md-sys-color-primary-container: #3700b3;
+      --md-sys-color-on-primary-container: #efb8ff;
+      --md-sys-color-secondary: #03dac6;
+      --md-sys-color-surface: #121212;
+      --md-sys-color-surface-variant: #1e1e1e;
+      --md-sys-color-surface-container: #2c2c2c;
+      --md-sys-color-surface-container-high: #3a3a3a;
+      --md-sys-color-on-surface: #e1e1e1;
+      --md-sys-color-on-surface-variant: #b0b0b0;
+      --md-sys-color-outline: #6e6e6e;
+      --md-sys-color-outline-variant: #3a3a3a;
+      --md-elevation-1: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+      --md-elevation-2: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+      --md-elevation-3: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+    }
+
+    body {
+      font-family: 'Google Sans', 'Segoe UI', Roboto, -apple-system, sans-serif;
+      background: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--md-sys-color-surface) 0%, var(--md-sys-color-surface-variant) 100%);
+      backdrop-filter: blur(20px);
+      padding: 16px 12px 12px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      position: relative;
+    }
+
+    .header-settings {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 101;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-icon svg {
+      width: 48px;
+      height: 48px;
+      filter: drop-shadow(0 2px 8px rgba(34, 197, 94, 0.3));
+    }
+
+    .logo-text {
+      flex: 1;
+    }
+
+    .logo-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-subtitle {
+      font-size: 11px;
+      color: var(--md-sys-color-on-surface-variant);
+      margin-top: 2px;
+      letter-spacing: 0.1px;
+    }
+
+    /* Collapsible header styles */
+    .collapsible-header {
+      max-height: 500px;
+      overflow: visible;
+      transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+      opacity: 1;
+    }
+
+    .collapsible-header.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    /* Reduce logo container margin when header is collapsed */
+    .logo-container {
+      transition: margin-bottom 0.3s ease;
+    }
+
+    body:has(.collapsible-header.collapsed) .logo-container {
+      margin-bottom: 2px;
+    }
+
+    #headerCollapseBtn svg {
+      transition: transform 0.3s ease;
+    }
+
+    #headerCollapseBtn.collapsed svg {
+      transform: rotate(180deg);
+    }
+
+    .search-container {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 40px;
+      border: none;
+      border-radius: 20px;
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+      font-size: 13px;
+      outline: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--md-elevation-1);
+    }
+
+    .search-input:focus {
+      background: var(--md-sys-color-surface-container-high);
+      box-shadow: var(--md-elevation-2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--md-sys-color-on-surface-variant);
+      width: 16px;
+      height: 16px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 16px;
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--md-elevation-1);
+      letter-spacing: 0.2px;
+    }
+
+    .btn:hover {
+      background: var(--md-sys-color-surface-container-high);
+      box-shadow: var(--md-elevation-2);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--md-sys-color-secondary);
+      box-shadow: var(--md-elevation-3);
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      justify-content: center;
+      border-radius: 50%;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      scroll-behavior: smooth;
+    }
+
+    /* Bookmark Item Styles */
+    .bookmark-item {
+      background: var(--md-sys-color-surface-container);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 0;  /* Drop zones now provide spacing */
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      box-shadow: var(--md-elevation-1);
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .bookmark-item:hover {
+      background: var(--md-sys-color-surface-container-high);
+      box-shadow: var(--md-elevation-2);
+      transform: translateY(-1px);
+      border-color: var(--md-sys-color-primary);
+      z-index: 2;
+    }
+
+    /* Disable hover transform when menu is open to prevent position shifts */
+    .bookmark-item:has(.bookmark-actions.show) {
+      z-index: 10000;
+      transform: none;
+    }
+
+    .bookmark-item:has(.bookmark-actions.show):hover {
+      transform: none;
+    }
+
+    .bookmark-item:active {
+      cursor: grabbing;
+      transform: scale(1.02);
+      z-index: 100;
+    }
+
+    /* Drop indicators for when hovering directly over bookmarks/folders */
+    .bookmark-item.drop-before::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--md-sys-color-primary);
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+      z-index: 1000;
+    }
+
+    .bookmark-item.drop-after::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--md-sys-color-primary);
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+      z-index: 1000;
+    }
+
+    .folder-item.drop-before::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--md-sys-color-primary);
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+      z-index: 1000;
+    }
+
+    .folder-item.drop-after::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--md-sys-color-primary);
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+      z-index: 1000;
+    }
+
+    .folder-item.drop-into .folder-header {
+      background: var(--md-sys-color-primary-container);
+      border: 2px solid var(--md-sys-color-primary);
+      border-radius: 8px;
+    }
+
+    /* Inter-item drop zones - fill the gap between items to make entire space droppable */
+    .inter-item-drop-zone {
+      height: 4px;
+      margin-bottom: 0;
+      position: relative;
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    /* Reduce spacing between folders */
+    .folder-item + .inter-item-drop-zone {
+      height: 2px;
+    }
+
+    .inter-item-drop-zone.drop-zone-active::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 4px;
+      transform: translateY(-50%);
+      background: var(--md-sys-color-primary);
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+      z-index: 1000;
+    }
+
+    .root-drop-zone {
+      border: 2px dashed transparent;
+      border-radius: 8px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 12px;
+    }
+
+    .root-drop-zone.drop-active {
+      border-color: var(--md-sys-color-primary);
+      background: var(--md-sys-color-primary-container);
+    }
+
+    .root-drop-zone.drop-active::before {
+      content: 'Drop here to move to root';
+    }
+
+    .status-indicators {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      flex-shrink: 0;
+      min-height: 20px;
+    }
+
+    .status-icon {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+    }
+
+    .status-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .status-live {
+      color: var(--md-sys-color-success);
+    }
+
+    .status-dead {
+      color: var(--md-sys-color-error);
+    }
+
+    .status-parked {
+      color: var(--md-sys-color-warning);
+    }
+
+    .status-checking {
+      color: var(--md-sys-color-outline);
+      opacity: 0.7;
+    }
+
+    .status-unknown {
+      color: var(--md-sys-color-outline);
+      opacity: 0.5;
+    }
+
+    .shield-indicator {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+      transition: all 0.2s;
+      border-radius: 4px;
+    }
+
+    .shield-indicator svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .shield-safe {
+      color: var(--md-sys-color-success);
+    }
+
+    .shield-warning {
+      color: var(--md-sys-color-warning);
+    }
+
+    .shield-unsafe {
+      color: var(--md-sys-color-error);
+    }
+
+    .shield-scanning {
+      color: var(--md-sys-color-outline);
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .shield-unknown {
+      color: #64748b;
+    }
+
+    .dark .shield-unknown {
+      color: #94a3b8;
+    }
+
+    .shield-indicator:hover {
+      transform: scale(1.2);
+    }
+
+    .shield-clickable {
+      cursor: pointer;
+    }
+
+    .shield-clickable:hover {
+      opacity: 0.8;
+    }
+
+    .bookmark-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bookmark-title {
+      font-weight: 500;
+      font-size: 13px;
+      color: var(--md-sys-color-on-surface);
+      line-height: 1.4;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bookmark-url {
+      font-size: 11px;
+      color: var(--md-sys-color-on-surface-variant);
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: 'Courier New', monospace;
+    }
+
+    .bookmark-favicon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      border-radius: 2px;
+      object-fit: contain;
+    }
+
+    .bookmark-tags {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .bookmark-menu-btn {
+      background: none;
+      border: none;
+      font-size: 16px;
+      color: var(--md-sys-color-on-surface-variant);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .bookmark-menu-btn:hover {
+      background: var(--md-sys-color-outline-variant);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .bookmark-actions {
+      position: absolute;
+      top: 100%;
+      right: 12px;
+      margin-top: 2px;
+      background: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 12px;
+      padding: 6px 0;
+      box-shadow: var(--md-elevation-3);
+      z-index: 9999;
+      min-width: 180px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-2px);
+      transition: opacity 0.15s ease, visibility 0.15s ease, transform 0.15s ease;
+      pointer-events: none;
+    }
+
+    .bookmark-actions.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .action-btn {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 10px 14px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--md-sys-color-on-surface);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.2s;
+    }
+
+    .action-btn:hover {
+      background: var(--md-sys-color-surface-container);
+    }
+
+    .action-btn.danger {
+      color: var(--md-sys-color-error);
+    }
+
+    .action-btn .icon {
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .action-btn .icon svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Bookmark Preview Styles - Based on React webapp */
+    .bookmark-preview-container {
+      flex-shrink: 0;
+      width: 0 !important;
+      align-self: stretch;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+      background: var(--md-sys-color-surface-container-low);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      margin: -10px 0;
+      margin-right: 0;
+    }
+
+    .bookmark-item:hover .bookmark-preview-container {
+      width: 112px !important;
+    }
+
+    /* Force preview to show (keyboard navigation) */
+    .bookmark-item.force-preview .bookmark-preview-container {
+      width: 112px !important;
+    }
+
+    /* Collapse preview when not hovering */
+    .bookmark-item:not(:hover):not(.force-preview) .bookmark-preview-container {
+      width: 0 !important;
+    }
+
+    /* Keep preview hidden when disabled */
+    .bookmark-item.no-preview .bookmark-preview-container,
+    .bookmark-item.no-preview:hover .bookmark-preview-container,
+    .bookmark-item.no-preview.force-preview .bookmark-preview-container {
+      width: 0 !important;
+      display: none;
+    }
+
+    .bookmark-preview-container .preview-loading {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--md-sys-color-on-surface-variant);
+      font-size: 10px;
+      font-weight: 500;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      padding: 8px;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .bookmark-preview-container .preview-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .bookmark-preview-container .preview-image.loaded {
+      opacity: 1;
+    }
+
+    /* Folder Styles */
+    .folder-item {
+      position: relative;
+      z-index: 1;
+    }
+
+    .folder-item:hover {
+      z-index: 2;
+    }
+
+    /* Boost z-index when folder menu is open */
+    .folder-item:has(.bookmark-actions.show) {
+      z-index: 10000;
+    }
+
+    .folder-item:has(.bookmark-actions.show) .folder-header {
+      transform: none;
+    }
+
+    .folder-header {
+      padding: 4px 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .folder-header:hover {
+      transform: translateY(-1px);
+    }
+
+    .folder-toggle {
+      font-size: 10px;
+      color: var(--md-sys-color-on-surface-variant);
+      transition: transform 0.2s;
+      width: 14px;
+      text-align: center;
+    }
+
+    .folder-toggle.expanded {
+      transform: rotate(90deg);
+    }
+
+    .folder-icon-container {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-right: 8px;
+    }
+
+    .folder-icon-outline {
+      position: absolute;
+      color: var(--md-sys-color-primary);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .folder-header:hover .folder-icon-outline {
+      color: var(--md-sys-color-secondary);
+      transform: scale(1.05);
+    }
+
+    .folder-count {
+      position: relative;
+      z-index: 1;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--md-sys-color-primary);
+      letter-spacing: -0.5px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Auto-shrink font size based on digit count */
+    .folder-count[data-digits="3"] {
+      font-size: 10px;
+      letter-spacing: -0.8px;
+    }
+
+    .folder-count[data-digits="4"],
+    .folder-count[data-digits="5"] {
+      font-size: 8px;
+      letter-spacing: -1px;
+    }
+
+    .folder-count[data-digits="6"],
+    .folder-count[data-digits="7"],
+    .folder-count[data-digits="8"],
+    .folder-count[data-digits="9"] {
+      font-size: 6px;
+      letter-spacing: -1.2px;
+    }
+
+    .folder-header:hover .folder-count {
+      color: var(--md-sys-color-secondary);
+      transform: scale(1.1);
+    }
+
+    .folder-title {
+      flex: 1;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+      font-size: 13px;
+    }
+
+    .folder-children {
+      margin-left: 8px;
+      margin-top: 2px;
+      padding-left: 4px;
+      border-left: 2px solid var(--md-sys-color-primary) !important;
+      display: none;
+    }
+
+    .folder-children.show {
+      display: block;
+    }
+
+    /* Filter Bar Styles */
+    .filters {
+      background: transparent;
+      border-bottom: none;
+      padding: 10px 12px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      max-height: 80px;
+      opacity: 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filters.hidden {
+      max-height: 0;
+      opacity: 0;
+      padding: 0 12px;
+      border-bottom: none;
+    }
+
+    .filter-chip {
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+      white-space: nowrap;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: var(--md-elevation-1);
+    }
+
+    .filter-chip:hover {
+      background: var(--md-sys-color-surface-container-high);
+      box-shadow: var(--md-elevation-2);
+      transform: translateY(-1px);
+      border-color: var(--md-sys-color-outline);
+    }
+
+    .filter-chip.active {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      border-color: var(--md-sys-color-primary);
+      box-shadow: var(--md-elevation-2);
+    }
+
+    .filter-chip.active:hover {
+      background: var(--md-sys-color-primary-container);
+      transform: translateY(-1px);
+      box-shadow: var(--md-elevation-3);
+    }
+
+    /* Display Toggle Styles */
+    .display-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+      white-space: nowrap;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--md-elevation-1);
+      user-select: none;
+    }
+
+    .display-toggle:hover {
+      background: var(--md-sys-color-surface-container-high);
+      box-shadow: var(--md-elevation-2);
+      transform: translateY(-1px);
+      border-color: var(--md-sys-color-outline);
+    }
+
+    .display-toggle input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      accent-color: var(--md-sys-color-primary);
+    }
+
+    /* Settings Menu Dropdown */
+    .settings-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--md-sys-color-surface);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 12px;
+      padding: 6px 0;
+      box-shadow: var(--md-elevation-3);
+      z-index: 9999;
+      min-width: 200px;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-top: 4px;
+    }
+
+    .settings-menu.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .settings-btn-wrapper,
+    .theme-btn-wrapper,
+    .view-btn-wrapper,
+    .zoom-btn-wrapper {
+      position: relative;
+    }
+
+    /* Zoom Menu Styles */
+    .zoom-menu {
+      min-width: 200px;
+    }
+
+    .zoom-slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--md-sys-color-surface-container-high);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .zoom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--md-sys-color-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .zoom-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 0 4px var(--md-sys-color-primary-container);
+    }
+
+    .zoom-slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--md-sys-color-primary);
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .zoom-slider::-moz-range-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 0 4px var(--md-sys-color-primary-container);
+    }
+
+    .zoom-slider::-webkit-slider-runnable-track {
+      background: linear-gradient(to right,
+        var(--md-sys-color-primary) 0%,
+        var(--md-sys-color-primary) var(--zoom-progress, 50%),
+        var(--md-sys-color-surface-container-high) var(--zoom-progress, 50%),
+        var(--md-sys-color-surface-container-high) 100%);
+      height: 6px;
+      border-radius: 3px;
+    }
+
+    .zoom-slider::-moz-range-track {
+      background: var(--md-sys-color-surface-container-high);
+      height: 6px;
+      border-radius: 3px;
+    }
+
+    .zoom-slider::-moz-range-progress {
+      background: var(--md-sys-color-primary);
+      height: 6px;
+      border-radius: 3px;
+    }
+
+    /* Grid View Styles */
+    .content.grid-view {
+      display: grid;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .content.grid-view.grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .content.grid-view.grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .content.grid-view.grid-4 {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .content.grid-view.grid-5 {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .content.grid-view.grid-6 {
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+
+    /* Folders span full width and stack vertically */
+    .content.grid-view .folder-item {
+      grid-column: 1 / -1;
+      margin-bottom: 0;
+    }
+
+    /* Bookmarks get more compact as columns increase */
+    .content.grid-view .bookmark-item {
+      margin-bottom: 0;
+    }
+
+    /* 2-3 column grid - normal size */
+    .content.grid-view.grid-2 .bookmark-item,
+    .content.grid-view.grid-3 .bookmark-item {
+      padding: 10px 12px;
+    }
+
+    /* 4-5 column grid - compact */
+    .content.grid-view.grid-4 .bookmark-item,
+    .content.grid-view.grid-5 .bookmark-item {
+      padding: 8px 10px;
+    }
+
+    .content.grid-view.grid-4 .bookmark-title,
+    .content.grid-view.grid-5 .bookmark-title {
+      font-size: 12px;
+    }
+
+    .content.grid-view.grid-4 .bookmark-url,
+    .content.grid-view.grid-5 .bookmark-url {
+      font-size: 10px;
+    }
+
+    .content.grid-view.grid-4 .status-icon,
+    .content.grid-view.grid-5 .status-icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* 6 column grid - very compact */
+    .content.grid-view.grid-6 .bookmark-item {
+      padding: 6px 8px;
+    }
+
+    .content.grid-view.grid-6 .bookmark-title {
+      font-size: 11px;
+    }
+
+    .content.grid-view.grid-6 .bookmark-url {
+      font-size: 9px;
+    }
+
+    .content.grid-view.grid-6 .status-icon {
+      width: 12px;
+      height: 12px;
+    }
+
+    .content.grid-view.grid-6 .bookmark-menu-btn {
+      font-size: 14px;
+    }
+
+    /* Grid view for folder children */
+    .content.grid-view .folder-children.show {
+      display: grid !important;
+      gap: inherit;
+      margin-left: 0;
+      padding-left: 12px;
+    }
+
+    .content.grid-view.grid-2 .folder-children.show {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .content.grid-view.grid-3 .folder-children.show {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .content.grid-view.grid-4 .folder-children.show {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .content.grid-view.grid-5 .folder-children.show {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .content.grid-view.grid-6 .folder-children.show {
+      grid-template-columns: repeat(6, 1fr);
+    }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.hidden {
+      display: none;
+    }
+
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+      position: relative;
+      background: var(--md-sys-color-surface);
+      border-radius: 16px;
+      box-shadow: var(--md-elevation-3);
+      max-width: 500px;
+      width: calc(100% - 40px);
+      max-height: 80vh;
+      overflow: auto;
+      z-index: 1;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: var(--md-sys-color-on-surface-variant);
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover {
+      background: var(--md-sys-color-surface-container-high);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: var(--md-sys-color-surface-container);
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 8px;
+      color: var(--md-sys-color-on-surface);
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--md-sys-color-primary);
+      background: var(--md-sys-color-surface-container-high);
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding: 16px 24px;
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    /* Undo Toast Styles */
+    .undo-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10001;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .undo-toast.hidden {
+      display: none;
+    }
+
+    .undo-toast-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--md-sys-color-surface-container-high);
+      border: 1px solid var(--md-sys-color-outline);
+      border-radius: 12px;
+      padding: 12px 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      min-width: 300px;
+      max-width: 500px;
+    }
+
+    .undo-toast-content svg {
+      color: var(--md-sys-color-primary);
+    }
+
+    .undo-toast-content > span {
+      flex: 1;
+      font-size: 14px;
+      color: var(--md-sys-color-on-surface);
+      font-weight: 500;
+    }
+
+    .undo-toast-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .undo-btn {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .undo-btn:hover {
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+      transform: scale(1.05);
+    }
+
+    .undo-dismiss {
+      background: transparent;
+      color: var(--md-sys-color-on-surface-variant);
+      border: none;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .undo-dismiss:hover {
+      background: var(--md-sys-color-surface-container-highest);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    /* Error Toast Styles */
+    .error-toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 10002;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .error-toast.hidden {
+      display: none;
+    }
+
+    .error-toast-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--md-sys-color-error-container);
+      border: 1px solid var(--md-sys-color-error);
+      color: var(--md-sys-color-on-error-container);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      min-width: 320px;
+      max-width: 480px;
+    }
+
+    .error-toast-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .error-btn {
+      background: var(--md-sys-color-error);
+      color: var(--md-sys-color-on-error);
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .error-btn:hover {
+      opacity: 0.9;
+      transform: scale(1.05);
+    }
+
+    .error-dismiss {
+      background: transparent;
+      color: var(--md-sys-color-on-error-container);
+      border: none;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .error-dismiss:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+  </style>
+</head>
+<body class="blue-dark">
+  <div class="header">
+    <div class="header-settings">
+      <button id="settingsBtn" class="btn btn-icon" title="Settings">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+          </svg>
+        </button>
+        <div id="settingsMenu" class="settings-menu">
+          <button class="action-btn" id="openInTabBtn">
+            <span class="icon">🗗</span>
+            <span>Open in New Tab</span>
+          </button>
+          <button class="action-btn" id="exportBookmarksBtn">
+            <span class="icon">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14,2L20,8V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V4A2,2 0 0,1 6,2H14M18,20V9H13V4H6V20H18M12,19L8,15H10.5V12H13.5V15H16L12,19Z"/>
+              </svg>
+            </span>
+            <span>Export Bookmarks (Backup)</span>
+          </button>
+          <div style="padding: 8px 16px; font-size: 11px; color: var(--md-sys-color-on-surface-variant); line-height: 1.4;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="color: var(--md-sys-color-on-surface); font-weight: 500;">Cache Size:</span>
+              <span id="cacheSize" style="color: var(--md-sys-color-primary); font-weight: 600;">Calculating...</span>
+            </div>
+            <div style="font-size: 10px; color: var(--md-sys-color-on-surface-variant);">
+              Stores link status, safety checks, and whitelisted URLs
+            </div>
+          </div>
+          <button class="action-btn" id="clearCacheBtn">
+            <span class="icon">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19.36,2.72L20.78,4.14L15.06,9.85C16.13,11.39 16.28,13.24 15.38,14.44L9.06,8.12C10.26,7.22 12.11,7.37 13.65,8.44L19.36,2.72M5.93,17.57C3.92,15.56 2.69,13.16 2.35,10.92L7.23,8.83L14.67,16.27L12.58,21.15C10.34,20.81 7.94,19.58 5.93,17.57Z"/>
+              </svg>
+            </span>
+            <span>Clear Cache</span>
+          </button>
+          <label class="action-btn" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="icon">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"/>
+                </svg>
+              </span>
+              <span>Auto-clear old cache</span>
+            </div>
+            <select id="autoClearCache" style="cursor: pointer; padding: 4px 8px; background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); border: 1px solid var(--md-sys-color-outline); border-radius: 4px; font-size: 11px;">
+              <option value="never">Never</option>
+              <option value="1">1 day</option>
+              <option value="3">3 days</option>
+              <option value="7" selected>7 days</option>
+              <option value="14">14 days</option>
+              <option value="30">30 days</option>
+            </select>
+          </label>
+          <button class="action-btn" id="rescanBookmarksBtn">
+            <span class="icon">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13 17.75,13.97 17.3,14.8L18.76,16.26C19.54,15.03 20,13.57 20,12A8,8 0 0,0 12,4Z"/>
+              </svg>
+            </span>
+            <span>Rescan All Bookmarks</span>
+          </button>
+          <div style="border-top: 1px solid var(--md-sys-color-outline-variant); margin: 6px 0;"></div>
+          <label class="action-btn" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="icon">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
+                </svg>
+              </span>
+              <span>Enable Link Checking</span>
+            </div>
+            <input type="checkbox" id="enableLinkChecking" checked style="cursor: pointer;">
+          </label>
+          <label class="action-btn" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="icon">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z"/>
+                </svg>
+              </span>
+              <span>Enable Safety Checking</span>
+            </div>
+            <input type="checkbox" id="enableSafetyChecking" checked style="cursor: pointer;">
+          </label>
+          <div style="border-top: 1px solid var(--md-sys-color-outline-variant); margin: 6px 0;"></div>
+          <button class="action-btn" id="setApiKeyBtn">
+            <span class="icon">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M7,14A2,2 0 0,1 5,12A2,2 0 0,1 7,10A2,2 0 0,1 9,12A2,2 0 0,1 7,14M12.65,10C11.83,7.67 9.61,6 7,6A6,6 0 0,0 1,12A6,6 0 0,0 7,18C9.61,18 11.83,16.33 12.65,14H17V18H21V14H23V10H12.65Z"/>
+              </svg>
+            </span>
+            <span>Set Google API Key</span>
+          </button>
+          <button class="action-btn" id="setVirusTotalApiKeyBtn">
+            <span class="icon">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5M12,7C13.4,7 14.8,8.1 14.8,9.5V11C15.4,11 16,11.6 16,12.3V15.8C16,16.4 15.4,17 14.7,17H9.2C8.6,17 8,16.4 8,15.7V12.2C8,11.6 8.6,11 9.2,11V9.5C9.2,8.1 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.7 10.5,9.5V11H13.5V9.5C13.5,8.7 12.8,8.2 12,8.2Z"/>
+              </svg>
+            </span>
+            <span>Set VirusTotal API Key</span>
+          </button>
+          <div style="border-top: 1px solid var(--md-sys-color-outline-variant); margin: 6px 0;"></div>
+          <div style="padding: 8px 16px; font-size: 11px; color: var(--md-sys-color-on-surface-variant); line-height: 1.4;">
+            <strong style="display: block; margin-bottom: 4px; color: var(--md-sys-color-on-surface);">Privacy Notice:</strong>
+            When enabled, bookmark previews are generated by WordPress mshots service. Your bookmark URLs are sent to wordpress.com for screenshot generation. Link and safety checking sends URLs to URLhaus, Google Safe Browsing (if API key set), and VirusTotal (if API key set). Disable these features in Display settings if you prefer not to share URLs with external services.
+          </div>
+          <div style="border-top: 1px solid var(--md-sys-color-outline-variant); margin: 6px 0;"></div>
+          <button class="action-btn" id="viewErrorLogsBtn">
+            <span class="icon">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+              </svg>
+            </span>
+            <span>View Error Logs</span>
+          </button>
+          <div style="border-top: 1px solid var(--md-sys-color-outline-variant); margin: 6px 0;"></div>
+          <button class="action-btn" id="helpDocsBtn">
+            <span class="icon">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11,18H13V16H11V18M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6A4,4 0 0,0 8,10H10A2,2 0 0,1 12,8A2,2 0 0,1 14,10C14,12 11,11.75 11,15H13C13,12.75 16,12.5 16,10A4,4 0 0,0 12,6Z"/>
+              </svg>
+            </span>
+            <span>Help & Documentation</span>
+          </button>
+          <button class="action-btn" id="buyMeCoffeeBtn">
+            <span class="icon">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M2,21V19H20V21H2M20,8V5H18V8H20M20,3A2,2 0 0,1 22,5V8A2,2 0 0,1 20,10H18V13A4,4 0 0,1 14,17H8A4,4 0 0,1 4,13V3H20M16,5H6V13A2,2 0 0,0 8,15H14A2,2 0 0,0 16,13V5Z"/>
+              </svg>
+            </span>
+            <span>Buy Me a Coffee</span>
+          </button>
+          <button class="action-btn" id="closeExtensionBtn">
+            <span class="icon">✕</span>
+            <span>Close Extension</span>
+          </button>
+        </div>
+      <button id="headerCollapseBtn" class="btn btn-icon" title="Collapse header">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="logo-container">
+      <div class="logo-icon">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#4ade80;stop-opacity:0.3" />
+              <stop offset="100%" style="stop-color:#22c55e;stop-opacity:0.5" />
+            </linearGradient>
+          </defs>
+
+          <!-- Outer glow -->
+          <path d="M24 4L8 10v10c0 10 7 19 16 22 9-3 16-12 16-22V10L24 4z"
+                fill="url(#shieldGradient)"
+                filter="url(#glow)"
+                opacity="0.4"/>
+
+          <!-- Shield shape -->
+          <path d="M24 4L8 10v10c0 10 7 19 16 22 9-3 16-12 16-22V10L24 4z"
+                stroke="#22c55e"
+                stroke-width="2"
+                fill="#1a1a1a"
+                filter="url(#glow)"/>
+
+          <!-- Inner shield accent -->
+          <path d="M24 8L12 12.5v8.5c0 8 5.5 15 12 17.5 6.5-2.5 12-9.5 12-17.5v-8.5L24 8z"
+                fill="#2d2d2d"
+                opacity="0.8"/>
+
+          <!-- Bookmark icon -->
+          <path d="M20 16h8c1.1 0 2 .9 2 2v14l-6-3-6 3V18c0-1.1.9-2 2-2z"
+                fill="#4ade80"
+                filter="url(#glow)"/>
+          <path d="M20 16h8c1.1 0 2 .9 2 2v14l-6-3-6 3V18c0-1.1.9-2 2-2z"
+                stroke="#22c55e"
+                stroke-width="1.5"
+                fill="none"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <div class="logo-title">Bookmark Manager Zero • <span style="color: var(--md-sys-color-primary); font-weight: 500; font-size: 11px;">v1.3.0</span></div>
+        <div class="logo-subtitle">A modern interface for your native bookmarks</div>
+      </div>
+    </div>
+
+    <div class="collapsible-header" id="collapsibleHeader">
+    <div class="search-container">
+      <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search bookmarks..." aria-label="Search bookmarks">
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button id="filterToggle" class="btn btn-icon" title="Filters" aria-label="Toggle filters" aria-pressed="false">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4.25,5.61C6.27,8.2,10,13,10,13v6c0,0.55,0.45,1,1,1h2c0.55,0,1-0.45,1-1v-6c0,0,3.72-4.8,5.74-7.39 C20.25,4.95,19.78,4,18.95,4H5.04C4.21,4,3.74,4.95,4.25,5.61z"/>
+          </svg>
+        </button>
+        <button id="displayToggle" class="btn btn-icon" title="Display Options" aria-label="Toggle display options" aria-pressed="false">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
+          </svg>
+        </button>
+        <button id="findDuplicatesBtn" class="btn btn-icon" title="Find Duplicate Bookmarks" aria-label="Find duplicate bookmarks">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19,3H14.82C14.25,1.44 12.53,0.64 11,1.2C10.14,1.5 9.5,2.16 9.18,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M12,3A1,1 0 0,1 13,4A1,1 0 0,1 12,5A1,1 0 0,1 11,4A1,1 0 0,1 12,3M7,7H17V5H19V19H5V5H7V7M12,17V15H17V17H12M12,11V9H17V11H12M8,12V9H10V12H8M8,17V14H10V17H8Z"/>
+          </svg>
+        </button>
+        <button id="multiSelectToggle" class="btn btn-icon" title="Multi-Select Mode" aria-label="Toggle multi-select mode" aria-pressed="false">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3,11H11V3H3M3,21H11V13H3M13,21H21V13H13M13,3V11H21V3"/>
+          </svg>
+        </button>
+        <button id="newFolderBtn" class="btn btn-icon" title="New Folder" aria-label="Create new folder">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4M15,9V12H18V14H15V17H13V14H10V12H13V9H15Z"/>
+          </svg>
+        </button>
+        <button id="newBookmarkBtn" class="btn btn-primary" title="New Bookmark" aria-label="Create new bookmark">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M17,3H7A2,2 0 0,0 5,5V21L12,18L19,21V5C19,3.89 18.1,3 17,3M11,7H13V9H15V11H13V13H11V11H9V9H11V7Z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="toolbar-right">
+        <div class="theme-btn-wrapper">
+          <button id="themeBtn" class="btn btn-icon" title="Theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7.5,2C5.71,3.15 4.5,5.18 4.5,7.5C4.5,9.82 5.71,11.85 7.53,13C4.46,13 2,10.54 2,7.5A5.5,5.5 0 0,1 7.5,2M19.07,3.5L20.5,4.93L4.93,20.5L3.5,19.07L19.07,3.5M12.89,5.93L11.41,5L9.97,6L10.39,4.3L9,3.24L10.75,3.12L11.33,1.47L12,3.1L13.73,3.13L12.38,4.26L12.89,5.93M9.59,9.54L8.43,8.81L7.31,9.59L7.65,8.27L6.56,7.44L7.92,7.35L8.37,6.06L8.88,7.33L10.24,7.36L9.19,8.23L9.59,9.54M19,13.5A5.5,5.5 0 0,1 13.5,19C12.28,19 11.15,18.6 10.24,17.93L17.93,10.24C18.6,11.15 19,12.28 19,13.5M14.6,20.08L17.37,18.93L17.13,22.28L14.6,20.08M18.93,17.38L20.08,14.61L22.28,17.15L18.93,17.38M20.08,12.42L18.94,9.64L22.28,9.88L20.08,12.42M9.63,18.93L12.4,20.08L9.87,22.27L9.63,18.93Z"/>
+            </svg>
+          </button>
+          <div id="themeMenu" class="settings-menu" role="menu" aria-label="Theme options">
+            <button class="action-btn" data-theme="blue-dark" role="menuitem" aria-label="Blue Dark theme">
+              <span class="icon" aria-hidden="true">🌙</span>
+              <span>Blue Dark (Default)</span>
+            </button>
+            <button class="action-btn" data-theme="light" role="menuitem" aria-label="Light theme">
+              <span class="icon" aria-hidden="true">☀️</span>
+              <span>Light</span>
+            </button>
+            <button class="action-btn" data-theme="dark" role="menuitem" aria-label="Dark theme">
+              <span class="icon" aria-hidden="true">🌑</span>
+              <span>Dark</span>
+            </button>
+          </div>
+        </div>
+        <div class="view-btn-wrapper">
+          <button id="viewBtn" class="btn btn-icon" title="View" aria-label="Change view layout" aria-haspopup="true" aria-expanded="false">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3,5H9V11H3V5M5,7V9H7V7H5M11,7H21V9H11V7M11,15H21V17H11V15M5,20L1.5,16.5L2.91,15.09L5,17.17L9.59,12.59L11,14L5,20Z"/>
+            </svg>
+          </button>
+          <div id="viewMenu" class="settings-menu">
+            <button class="action-btn" data-view="list">
+              <span class="icon">☰</span>
+              <span>List View</span>
+            </button>
+            <div style="font-size: 11px; color: var(--md-sys-color-on-surface-variant); padding: 8px 16px; font-weight: 500;">Grid View</div>
+            <button class="action-btn" data-view="grid-2">
+              <span class="icon">▦</span>
+              <span>2 Columns</span>
+            </button>
+            <button class="action-btn" data-view="grid-3">
+              <span class="icon">▦</span>
+              <span>3 Columns</span>
+            </button>
+            <button class="action-btn" data-view="grid-4">
+              <span class="icon">▦</span>
+              <span>4 Columns</span>
+            </button>
+            <button class="action-btn" data-view="grid-5">
+              <span class="icon">▦</span>
+              <span>5 Columns</span>
+            </button>
+            <button class="action-btn" data-view="grid-6">
+              <span class="icon">▦</span>
+              <span>6 Columns</span>
+            </button>
+          </div>
+        </div>
+        <div class="zoom-btn-wrapper">
+          <button id="zoomBtn" class="btn btn-icon" title="Zoom">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M15.5,14L20.5,19L19,20.5L14,15.5V14.71L13.73,14.43C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.43,13.73L14.71,14H15.5M9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14M12,10H10V12H9V10H7V9H9V7H10V9H12V10Z"/>
+            </svg>
+          </button>
+          <div id="zoomMenu" class="settings-menu zoom-menu">
+            <div style="padding: 12px 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 11px; color: var(--md-sys-color-on-surface-variant); font-weight: 500;">Zoom</span>
+                <span id="zoomValue" style="font-size: 12px; font-weight: 600; color: var(--md-sys-color-primary);">100%</span>
+              </div>
+              <input type="range" id="zoomSlider" min="50" max="200" value="100" step="10" class="zoom-slider">
+              <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: var(--md-sys-color-on-surface-variant);">
+                <span>50%</span>
+                <span>200%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="filterBar" class="filters hidden">
+    <div style="font-size: 11px; color: var(--md-sys-color-on-surface-variant); font-weight: 500; white-space: nowrap;">Filter:</div>
+    <button class="filter-chip" data-filter="live" title="Show only live links">
+      <svg width="12" height="12" fill="var(--md-sys-color-success)" viewBox="0 0 24 24">
+        <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
+      </svg>
+      <span>Live</span>
+    </button>
+    <button class="filter-chip" data-filter="parked" title="Show only parked domains">
+      <svg width="12" height="12" fill="var(--md-sys-color-warning)" viewBox="0 0 24 24">
+        <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
+        <circle cx="18" cy="6" r="5" fill="var(--md-sys-color-warning)"/>
+        <text x="18" y="9.5" text-anchor="middle" font-size="10" font-weight="bold" fill="white">!</text>
+      </svg>
+      <span>Parked</span>
+    </button>
+    <button class="filter-chip" data-filter="dead" title="Show only dead links">
+      <svg width="12" height="12" fill="var(--md-sys-color-error)" viewBox="0 0 24 24">
+        <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
+      </svg>
+      <span>Dead</span>
+    </button>
+    <div style="flex-basis: 100%; height: 0;"></div>
+    <div style="width: 25px; flex-shrink: 0;"></div>
+    <button class="filter-chip" data-filter="safe" title="Show only safe URLs">
+      <svg width="12" height="12" fill="var(--md-sys-color-success)" viewBox="0 0 24 24">
+        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.18L16.59,7.59L18,9L10,17Z"/>
+      </svg>
+      <span>Safe</span>
+    </button>
+    <button class="filter-chip" data-filter="suspicious" title="Show only suspicious URLs">
+      <svg width="12" height="12" fill="var(--md-sys-color-warning)" viewBox="0 0 24 24">
+        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M13,7H11V13H13V7M13,17H11V15H13V17Z"/>
+      </svg>
+      <span>Suspicious</span>
+    </button>
+    <button class="filter-chip" data-filter="unsafe" title="Show only unsafe URLs">
+      <svg width="12" height="12" fill="var(--md-sys-color-error)" viewBox="0 0 24 24">
+        <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.1,7 14,7.9 14,9V10.5L15.5,10.5C16.3,10.5 17,11.2 17,12V16C17,16.8 16.3,17.5 15.5,17.5H8.5C7.7,17.5 7,16.8 7,16V12C7,11.2 7.7,10.5 8.5,10.5H10V9C10,7.9 10.9,7 12,7M12,8.2C11.2,8.2 10.8,8.7 10.8,9V10.5H13.2V9C13.2,8.7 12.8,8.2 12,8.2Z"/>
+      </svg>
+      <span>Unsafe</span>
+    </button>
+  </div>
+
+  <div id="displayBar" class="filters hidden">
+    <div style="font-size: 11px; color: var(--md-sys-color-on-surface-variant); font-weight: 500; white-space: nowrap;">Display:</div>
+    <label class="display-toggle" title="Show/hide bookmark titles">
+      <input type="checkbox" id="displayTitle" checked>
+      <span>Title</span>
+    </label>
+    <label class="display-toggle" title="Show/hide bookmark URLs">
+      <input type="checkbox" id="displayUrl" checked>
+      <span>URL</span>
+    </label>
+    <label class="display-toggle" title="Show/hide website favicons">
+      <input type="checkbox" id="displayFavicon" checked>
+      <span>Favicon</span>
+    </label>
+    <label class="display-toggle" title="Show/hide live link status">
+      <input type="checkbox" id="displayLiveStatus" checked>
+      <span>Live Status</span>
+    </label>
+    <label class="display-toggle" title="Show/hide safety status">
+      <input type="checkbox" id="displaySafetyStatus" checked>
+      <span>Safety Status</span>
+    </label>
+    <label class="display-toggle" title="Show/hide webpage preview">
+      <input type="checkbox" id="displayPreview" checked>
+      <span>Preview</span>
+    </label>
+  </div>
+
+  <!-- Bulk Actions Bar -->
+  <div id="bulkActionsBar" class="filters hidden" role="toolbar" aria-label="Bulk actions" style="background: var(--md-sys-color-primary-container); border-bottom: 1px solid var(--md-sys-color-primary);">
+    <div style="font-size: 12px; font-weight: 600; color: var(--md-sys-color-on-primary-container);" aria-live="polite" aria-atomic="true">
+      <span id="selectedCount">0</span> selected
+    </div>
+    <button class="btn btn-icon" id="bulkSelectAll" title="Select All" aria-label="Select all items">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M0.41,13.41L6,19L7.41,17.58L1.83,12M22.24,5.58L11.66,16.17L7.5,12L6.07,13.41L11.66,19L23.66,7M18,7L16.59,5.58L10.24,11.93L11.66,13.34L18,7Z"/>
+      </svg>
+    </button>
+    <button class="btn btn-icon" id="bulkDeselectAll" title="Deselect All" aria-label="Deselect all items">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+      </svg>
+    </button>
+    <div style="flex: 1;"></div>
+    <button class="btn" id="bulkRecheck" title="Recheck Selected" aria-label="Recheck security status of selected items">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13 17.75,13.97 17.3,14.8L18.76,16.26C19.54,15.03 20,13.57 20,12A8,8 0 0,0 12,4Z"/>
+      </svg>
+      <span>Recheck</span>
+    </button>
+    <button class="btn" id="bulkMove" title="Move Selected" aria-label="Move selected items to a folder">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"/>
+      </svg>
+      <span>Move</span>
+    </button>
+    <button class="btn" id="bulkDelete" title="Delete Selected" aria-label="Delete selected items" style="color: var(--md-sys-color-error);">
+      <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+      </svg>
+      <span>Delete</span>
+    </button>
+  </div>
+  </div>
+
+  <div class="content" id="bookmarkList">
+    <div style="text-align: center; padding: 40px 20px; color: var(--md-sys-color-on-surface-variant);">
+      <div style="font-size: 14px;">Loading bookmarks...</div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editModalTitle" aria-hidden="true">
+    <div class="modal-overlay" aria-hidden="true"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="editModalTitle">Edit Bookmark</h3>
+        <button class="modal-close" id="editModalClose" aria-label="Close dialog">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editTitle">Title:</label>
+          <input type="text" id="editTitle" class="form-input">
+        </div>
+        <div class="form-group" id="editUrlGroup">
+          <label for="editUrl">URL:</label>
+          <input type="text" id="editUrl" class="form-input">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="editModalCancel">Cancel</button>
+        <button class="btn btn-primary" id="editModalSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Bookmark Modal -->
+  <div id="addBookmarkModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="addBookmarkModalTitle" aria-hidden="true">
+    <div class="modal-overlay" aria-hidden="true"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="addBookmarkModalTitle">Add New Bookmark</h3>
+        <button class="modal-close" id="addBookmarkModalClose" aria-label="Close dialog">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="newBookmarkTitle">Title:</label>
+          <input type="text" id="newBookmarkTitle" class="form-input" placeholder="Bookmark title">
+        </div>
+        <div class="form-group">
+          <label for="newBookmarkUrl">URL:</label>
+          <input type="text" id="newBookmarkUrl" class="form-input" placeholder="https://example.com">
+        </div>
+        <div class="form-group">
+          <label for="newBookmarkFolder">Add to folder:</label>
+          <select id="newBookmarkFolder" class="form-input">
+            <option value="">Root</option>
+          </select>
+          <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; cursor: pointer;">
+            <input type="checkbox" id="sortBookmarkFoldersAlpha" style="cursor: pointer;">
+            <span>Sort alphabetically</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="addBookmarkModalCancel">Cancel</button>
+        <button class="btn btn-primary" id="addBookmarkModalSave">Add Bookmark</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Folder Modal -->
+  <div id="addFolderModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="addFolderModalTitle" aria-hidden="true">
+    <div class="modal-overlay" aria-hidden="true"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="addFolderModalTitle">Create New Folder</h3>
+        <button class="modal-close" id="addFolderModalClose" aria-label="Close dialog">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="newFolderName">Folder name:</label>
+          <input type="text" id="newFolderName" class="form-input" placeholder="New Folder">
+        </div>
+        <div class="form-group">
+          <label for="newFolderParent">Create in:</label>
+          <select id="newFolderParent" class="form-input">
+            <option value="">Root</option>
+          </select>
+          <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; cursor: pointer;">
+            <input type="checkbox" id="sortFolderParentsAlpha" style="cursor: pointer;">
+            <span>Sort alphabetically</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="addFolderModalCancel">Cancel</button>
+        <button class="btn btn-primary" id="addFolderModalSave">Create Folder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Duplicates Modal -->
+  <div id="duplicatesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="duplicatesModalTitle" aria-hidden="true">
+    <div class="modal-overlay" aria-hidden="true"></div>
+    <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3 id="duplicatesModalTitle">Duplicate Bookmarks</h3>
+        <button class="modal-close" id="duplicatesModalClose" aria-label="Close dialog">×</button>
+      </div>
+      <div class="modal-body" style="max-height: 500px; overflow-y: auto;">
+        <div id="duplicatesContent">
+          <!-- Will be populated dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="duplicatesModalCancel">Close</button>
+        <button class="btn btn-danger" id="duplicatesModalDelete" style="background: #dc2626;">Delete Selected</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Undo Toast -->
+  <div id="undoToast" class="undo-toast hidden">
+    <div class="undo-toast-content">
+      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0;">
+        <path d="M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z"/>
+      </svg>
+      <span id="undoMessage">Bookmark deleted</span>
+      <div class="undo-toast-actions">
+        <button id="undoButton" class="undo-btn">Undo (<span id="undoCountdown">5</span>)</button>
+        <button id="undoDismiss" class="undo-dismiss">×</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Toast -->
+  <div id="errorToast" class="error-toast hidden" role="alert" aria-live="assertive">
+    <div class="error-toast-content">
+      <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0; color: #dc2626;">
+        <path d="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16"/>
+      </svg>
+      <div style="flex: 1;">
+        <div id="errorTitle" style="font-weight: 600; margin-bottom: 2px;">Error</div>
+        <div id="errorMessage" style="font-size: 12px; opacity: 0.9;">An unexpected error occurred</div>
+      </div>
+      <div class="error-toast-actions">
+        <button id="errorReload" class="error-btn">Reload</button>
+        <button id="errorDismiss" class="error-dismiss">×</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
