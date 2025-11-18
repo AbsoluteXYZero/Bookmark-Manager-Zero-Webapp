@@ -22,7 +22,7 @@
   <path d="M24 4L8 10v10c0 10 7 19 16 22 9-3 16-12 16-22V10L24 4z"
         stroke="#22c55e"
         stroke-width="2"
-        fill="none"
+        fill="#1a1a1a"
         filter="url(#glow)"/>
 
   <!-- Bookmark icon -->
