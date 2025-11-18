@@ -98,6 +98,10 @@ let checkedBookmarks = new Set(); // Track which bookmarks have been checked to 
 let scanCancelled = false; // Flag to cancel ongoing scans
 let linkCheckingEnabled = true; // Toggle for link checking
 let safetyCheckingEnabled = true; // Toggle for safety checking
+let whitelistedUrls = new Set(); // URLs whitelisted by user
+let safetyHistory = {}; // Track safety status changes over time {url: [{timestamp, status, sources}]}
+let selectedBookmarkIndex = -1; // Currently selected bookmark for keyboard navigation
+let visibleBookmarks = []; // Flat list of visible bookmarks for keyboard navigation
 
 // Track open menus to preserve state across re-renders
 let openMenuBookmarkId = null;
@@ -165,6 +169,8 @@ async function init() {
   loadView();
   loadZoom();
   loadCheckingSettings();
+  await loadWhitelist();
+  await loadSafetyHistory();
   await loadBookmarks();
   setupEventListeners();
   renderBookmarks();
@@ -336,19 +342,22 @@ async function autoCheckBookmarkStatuses() {
 
   const bookmarksToCheck = [];
 
-  // Traverse tree to find unchecked bookmarks
-  function traverse(nodes) {
+  // Traverse tree to find unchecked bookmarks (only in root or expanded folders)
+  function traverse(nodes, parentExpanded = true) {
     nodes.forEach(node => {
-      if (node.type === 'bookmark' && node.url && !node.linkStatus && !checkedBookmarks.has(node.id)) {
+      // Only check bookmarks if parent is expanded (or at root level)
+      if (parentExpanded && node.type === 'bookmark' && node.url && !node.linkStatus && !checkedBookmarks.has(node.id)) {
         bookmarksToCheck.push(node);
       }
+      // For folders, only traverse children if folder is expanded
       if (node.type === 'folder' && node.children) {
-        traverse(node.children);
+        const isFolderExpanded = expandedFolders.has(node.id);
+        traverse(node.children, isFolderExpanded);
       }
     });
   }
 
-  traverse(bookmarkTree);
+  traverse(bookmarkTree, true);
 
   if (bookmarksToCheck.length === 0) return;
 
@@ -1081,6 +1090,14 @@ function createBookmarkElement(bookmark) {
         </span>
         <span>Recheck Security Status</span>
       </button>
+      <button class="action-btn" data-action="whitelist">
+        <span class="icon">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"/>
+          </svg>
+        </span>
+        <span>Whitelist (Trust Site)</span>
+      </button>
       <button class="action-btn" data-action="virustotal">
         <span class="icon">
           <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
@@ -1570,6 +1587,8 @@ function toggleFolder(folderId, folderElement) {
     expandedFolders.delete(folderId);
   } else {
     expandedFolders.add(folderId);
+    // When expanding a folder, check its bookmarks
+    setTimeout(() => autoCheckBookmarkStatuses(), 100);
   }
 
   // Re-render to reflect changes
@@ -1981,6 +2000,18 @@ async function checkLinkStatus(url) {
 // Uses pattern matching and domain reputation checks
 // Checks for: HTTPS, suspicious patterns, URL shorteners, known safe domains
 async function checkSafetyStatus(url) {
+  // Check if URL is whitelisted
+  try {
+    const hostname = new URL(url).hostname;
+    if (whitelistedUrls.has(hostname)) {
+      const result = { status: 'safe', sources: ['Whitelisted by user'] };
+      trackSafetyChange(url, result.status, result.sources);
+      return result;
+    }
+  } catch (error) {
+    console.error('Error parsing URL for whitelist check:', error);
+  }
+
   if (isPreviewMode) {
     // Simulate checking in preview mode
     return new Promise(resolve => {
@@ -1997,10 +2028,13 @@ async function checkSafetyStatus(url) {
       action: 'checkURLSafety',
       url: url
     });
-    return {
+    const result = {
       status: response.status || 'unknown',
       sources: response.sources || []
     };
+    // Track status change
+    trackSafetyChange(url, result.status, result.sources);
+    return result;
   } catch (error) {
     console.error('Error checking URL safety:', error);
     return { status: 'unknown', sources: [] };
@@ -2065,6 +2099,125 @@ function updateBookmarkInTree(bookmarkId, updates) {
     });
   };
   bookmarkTree = updateNode(bookmarkTree);
+}
+
+// Whitelist a bookmark (trust it regardless of safety checks)
+async function whitelistBookmark(bookmark) {
+  if (!bookmark || !bookmark.url) return;
+
+  const hostname = new URL(bookmark.url).hostname;
+
+  if (whitelistedUrls.has(hostname)) {
+    const remove = confirm(`"${hostname}" is already whitelisted.\n\nDo you want to remove it from the whitelist?`);
+    if (remove) {
+      whitelistedUrls.delete(hostname);
+      await saveWhitelist();
+      alert(`Removed "${hostname}" from whitelist.\n\nIt will be scanned normally on next check.`);
+      // Recheck the bookmark
+      await recheckBookmarkStatus(bookmark.id);
+    }
+  } else {
+    const confirm_add = confirm(`Add "${hostname}" to whitelist?\n\nWhitelisted sites are marked as safe regardless of security scan results.\n\nOnly whitelist sites you trust completely.`);
+    if (confirm_add) {
+      whitelistedUrls.add(hostname);
+      await saveWhitelist();
+      // Update safety status to safe
+      updateBookmarkInTree(bookmark.id, {
+        safetyStatus: 'safe',
+        safetySources: ['Whitelisted by user']
+      });
+      renderBookmarks();
+      alert(`"${hostname}" added to whitelist.\n\nAll bookmarks from this site will be marked as safe.`);
+    }
+  }
+}
+
+// Save whitelist to storage
+async function saveWhitelist() {
+  if (isPreviewMode) return;
+  try {
+    await browser.storage.local.set({
+      whitelistedUrls: Array.from(whitelistedUrls)
+    });
+  } catch (error) {
+    console.error('Failed to save whitelist:', error);
+  }
+}
+
+// Load whitelist from storage
+async function loadWhitelist() {
+  if (isPreviewMode) return;
+  try {
+    const result = await browser.storage.local.get('whitelistedUrls');
+    if (result.whitelistedUrls && Array.isArray(result.whitelistedUrls)) {
+      whitelistedUrls = new Set(result.whitelistedUrls);
+      console.log(`Loaded ${whitelistedUrls.size} whitelisted URLs`);
+    }
+  } catch (error) {
+    console.error('Failed to load whitelist:', error);
+  }
+}
+
+// Save safety history to storage
+async function saveSafetyHistory() {
+  if (isPreviewMode) return;
+  try {
+    await browser.storage.local.set({ safetyHistory });
+  } catch (error) {
+    console.error('Failed to save safety history:', error);
+  }
+}
+
+// Load safety history from storage
+async function loadSafetyHistory() {
+  if (isPreviewMode) return;
+  try {
+    const result = await browser.storage.local.get('safetyHistory');
+    if (result.safetyHistory) {
+      safetyHistory = result.safetyHistory;
+      console.log(`Loaded safety history for ${Object.keys(safetyHistory).length} URLs`);
+    }
+  } catch (error) {
+    console.error('Failed to load safety history:', error);
+  }
+}
+
+// Track safety status change and alert if degraded
+function trackSafetyChange(url, newStatus, sources) {
+  if (!url) return;
+
+  const timestamp = Date.now();
+
+  // Initialize history for this URL if needed
+  if (!safetyHistory[url]) {
+    safetyHistory[url] = [];
+  }
+
+  const history = safetyHistory[url];
+  const lastStatus = history.length > 0 ? history[history.length - 1].status : null;
+
+  // Add new entry
+  history.push({ timestamp, status: newStatus, sources });
+
+  // Keep only last 10 entries per URL
+  if (history.length > 10) {
+    history.shift();
+  }
+
+  // Alert if status degraded from safe to unsafe/suspicious
+  if (lastStatus === 'safe' && (newStatus === 'unsafe' || newStatus === 'suspicious')) {
+    const hostname = new URL(url).hostname;
+    console.warn(`⚠️ Security alert: ${hostname} changed from safe to ${newStatus}`);
+
+    // Show alert to user
+    setTimeout(() => {
+      const message = `⚠️ SECURITY ALERT\n\n"${hostname}" was previously marked as SAFE but is now flagged as ${newStatus.toUpperCase()}!\n\nSources: ${sources.join(', ')}\n\nPlease verify this site before visiting.`;
+      alert(message);
+    }, 100);
+  }
+
+  // Save history
+  saveSafetyHistory();
 }
 
 // Handle bookmark actions
@@ -2137,6 +2290,10 @@ async function handleBookmarkAction(action, bookmark) {
 
     case 'recheck':
       await recheckBookmarkStatus(bookmark.id);
+      break;
+
+    case 'whitelist':
+      await whitelistBookmark(bookmark);
       break;
 
     case 'virustotal':
@@ -3396,6 +3553,55 @@ function setupEventListeners() {
     console.log('[Bookmark Sync] ✓ Real-time bidirectional sync enabled');
   }
 
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    // Skip if user is typing in an input field
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+      return;
+    }
+
+    // Skip if a modal is open
+    if (!document.getElementById('editModal').classList.contains('hidden') ||
+        !document.getElementById('addBookmarkModal').classList.contains('hidden') ||
+        !document.getElementById('addFolderModal').classList.contains('hidden') ||
+        !document.getElementById('duplicatesModal').classList.contains('hidden')) {
+      return;
+    }
+
+    // Build list of visible bookmark elements
+    const bookmarkElements = Array.from(bookmarkList.querySelectorAll('.bookmark-item'));
+
+    if (bookmarkElements.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        selectedBookmarkIndex = Math.min(selectedBookmarkIndex + 1, bookmarkElements.length - 1);
+        highlightSelectedBookmark(bookmarkElements);
+        break;
+
+      case 'ArrowUp':
+        e.preventDefault();
+        selectedBookmarkIndex = Math.max(selectedBookmarkIndex - 1, 0);
+        highlightSelectedBookmark(bookmarkElements);
+        break;
+
+      case 'Enter':
+        e.preventDefault();
+        if (selectedBookmarkIndex >= 0 && selectedBookmarkIndex < bookmarkElements.length) {
+          // Open the selected bookmark
+          bookmarkElements[selectedBookmarkIndex].click();
+        }
+        break;
+
+      case 'Escape':
+        // Clear selection
+        selectedBookmarkIndex = -1;
+        bookmarkElements.forEach(el => el.style.outline = '');
+        break;
+    }
+  });
+
   // Undo toast event listeners
   undoButton.addEventListener('click', () => {
     performUndo();
@@ -3404,6 +3610,21 @@ function setupEventListeners() {
   undoDismiss.addEventListener('click', () => {
     hideUndoToast();
   });
+}
+
+// Highlight the selected bookmark for keyboard navigation
+function highlightSelectedBookmark(bookmarkElements) {
+  // Remove highlight from all bookmarks
+  bookmarkElements.forEach(el => el.style.outline = '');
+
+  // Add highlight to selected bookmark
+  if (selectedBookmarkIndex >= 0 && selectedBookmarkIndex < bookmarkElements.length) {
+    const selected = bookmarkElements[selectedBookmarkIndex];
+    selected.style.outline = '2px solid var(--md-sys-color-primary)';
+    selected.style.outlineOffset = '2px';
+    // Scroll into view
+    selected.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 // Initialize when DOM is ready
