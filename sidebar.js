@@ -1850,7 +1850,7 @@ async function recheckBookmarkStatus(bookmarkId) {
   renderBookmarks();
 
   // Perform checks
-  const [linkStatus, safetyStatus] = await Promise.all([
+  const [linkStatus, safetyStatusResult] = await Promise.all([
     checkLinkStatus(bookmark.url),
     checkSafetyStatus(bookmark.url)
   ]);
@@ -1858,7 +1858,8 @@ async function recheckBookmarkStatus(bookmarkId) {
   // Update bookmark with results
   updateBookmarkInTree(bookmarkId, {
     linkStatus,
-    safetyStatus
+    safetyStatus: safetyStatusResult.status,
+    safetySources: safetyStatusResult.sources
   });
   renderBookmarks();
 }

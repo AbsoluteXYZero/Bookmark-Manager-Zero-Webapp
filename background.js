@@ -224,22 +224,22 @@ const BLOCKLIST_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 // Blocklist sources - all free, no API keys required
 const BLOCKLIST_SOURCES = [
   {
-    name: 'URLhaus',
+    name: 'https://urlhaus.abuse.ch',
     url: 'https://urlhaus.abuse.ch/downloads/text/',
     format: 'urlhaus' // Plain text with # comments
   },
   {
-    name: 'BlockList-Malware',
+    name: 'https://github.com/blocklistproject/Lists (Malware)',
     url: 'https://blocklistproject.github.io/Lists/malware.txt',
     format: 'hosts' // Hosts file format (0.0.0.0 domain.com)
   },
   {
-    name: 'BlockList-Phishing',
+    name: 'https://github.com/blocklistproject/Lists (Phishing)',
     url: 'https://blocklistproject.github.io/Lists/phishing.txt',
     format: 'hosts'
   },
   {
-    name: 'BlockList-Scam',
+    name: 'https://github.com/blocklistproject/Lists (Scam)',
     url: 'https://blocklistproject.github.io/Lists/scam.txt',
     format: 'hosts'
   }
@@ -418,7 +418,11 @@ const updateBlocklistDatabase = async () => {
 
         // Track which source(s) flagged this domain
         if (domainSourceMap.has(domain)) {
-          domainSourceMap.get(domain).push(sourceName);
+          // Use a Set to avoid duplicates when same domain appears multiple times in one blocklist
+          const sources = domainSourceMap.get(domain);
+          if (!sources.includes(sourceName)) {
+            sources.push(sourceName);
+          }
         } else {
           domainSourceMap.set(domain, [sourceName]);
         }
