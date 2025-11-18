@@ -217,6 +217,122 @@ The extension can optionally use external services for enhanced features. **All 
 
 All external service usage is disclosed in [PRIVACY.md](PRIVACY.md).
 
+## How Link & Safety Checking Works
+
+This section provides technical details on how the extension determines link status and safety for anyone interested in the methodology.
+
+### Link Status Checking
+
+The extension checks if bookmark URLs are still accessible and categorizes them as **Live**, **Dead**, or **Parked**.
+
+#### Detection Method
+
+1. **Initial Domain Check**: The URL's domain is first checked against a list of known domain parking services (HugeDomains, GoDaddy, Namecheap, Sedo, etc.)
+
+2. **HTTP HEAD Request**: A lightweight HEAD request is sent to the URL with a 10-second timeout
+   - No page content is downloaded
+   - Only HTTP response codes are checked
+   - Credentials are omitted for privacy
+
+3. **Response Code Interpretation**:
+   - **2xx or 3xx** → Live (successful response or redirect)
+   - **4xx or 5xx** → Dead (client/server error)
+   - **Timeout/Network Error** → Dead
+
+4. **Redirect Analysis**: If the URL redirects, the final destination is checked against parking domain lists
+
+5. **Content Analysis** (for ambiguous cases): Page HTML is analyzed for 50+ parking indicators like "domain for sale", "buy this domain", "parked free", etc.
+
+6. **Fallback Strategy**: If HEAD fails due to CORS, a GET request with `no-cors` mode is attempted
+
+#### Caching
+Results are cached locally for 7 days to minimize network requests.
+
+---
+
+### Safety Checking
+
+The extension checks URLs against multiple threat databases to identify malicious, phishing, or scam websites.
+
+#### Phase 1: Blocklist Lookup (Free, No API Key Required)
+
+URLs are checked against four community-maintained blocklists:
+
+| Source | Type | Description |
+|--------|------|-------------|
+| **[URLhaus](https://urlhaus.abuse.ch/)** | Malware URLs | Database by abuse.ch tracking malware distribution sites |
+| **[BlockList Project - Malware](https://github.com/blocklistproject/Lists)** | Malware Domains | Community-maintained malware domain list |
+| **[BlockList Project - Phishing](https://github.com/blocklistproject/Lists)** | Phishing Domains | Known phishing sites |
+| **[BlockList Project - Scam](https://github.com/blocklistproject/Lists)** | Scam Domains | Known scam websites |
+
+- Blocklists are downloaded and cached locally
+- Updated every 24 hours
+- Both full URLs and domains are checked
+- **Any match → Unsafe** (shows which source flagged it)
+
+#### Phase 2: Google Safe Browsing (Optional, Requires Free API Key)
+
+If configured, URLs are checked against Google's threat database:
+
+- **Threat Types Checked**: Malware, Social Engineering, Unwanted Software, Potentially Harmful Applications
+- **Method**: POST request to Safe Browsing API v4
+- **Rate Limit**: 10,000 requests/day (free tier)
+- **Any match → Unsafe**
+
+#### Phase 3: VirusTotal (Optional, Requires Free API Key)
+
+If configured, URLs are submitted to VirusTotal's multi-engine scanner:
+
+1. URL is submitted for analysis
+2. Results are retrieved after 2 seconds
+3. Multiple antivirus engines analyze the URL
+
+**Threat Determination**:
+- **2+ engines flag as malicious → Unsafe**
+- **1 malicious OR 2+ suspicious → Warning**
+- **0 detections → Safe**
+
+**Rate Limit**: 500 requests/day, 4 requests/minute (free tier)
+
+#### Phase 4: Suspicious Pattern Detection
+
+If all above checks pass, the URL is analyzed for suspicious patterns:
+
+| Pattern | Detection | Result |
+|---------|-----------|--------|
+| **HTTP Only** | URL uses `http://` instead of `https://` | Warning |
+| **URL Shortener** | Domain is bit.ly, tinyurl.com, t.co, etc. (15+ services) | Warning |
+| **Suspicious TLD** | Domain ends in .xyz, .top, .tk, .ml, .ga, .cf, .gq, etc. | Warning |
+| **IP Address** | URL uses IP address instead of domain name | Warning |
+
+#### Final Status Determination
+
+| Check Result | Final Status |
+|--------------|--------------|
+| Blocklist match | **Unsafe** (red shield) |
+| Google Safe Browsing match | **Unsafe** (red shield) |
+| VirusTotal 2+ malicious | **Unsafe** (red shield) |
+| VirusTotal 1 malicious or 2+ suspicious | **Warning** (yellow shield) |
+| Suspicious patterns found | **Warning** (yellow shield) |
+| All checks pass | **Safe** (green shield) |
+
+#### Caching & Privacy
+
+- All results are cached locally for 7 days
+- Only URLs are sent to external services (no personal data)
+- API keys are encrypted with AES-256-GCM before storage
+- All features can be disabled in settings
+- In private browsing, cache uses memory only (no disk writes)
+
+---
+
+### Whitelisting
+
+Users can whitelist specific URLs to:
+- Skip safety checks for trusted sites
+- Override false positives
+- Whitelist is stored locally and persists across sessions
+
 ## Permissions
 
 ### Required Permissions
