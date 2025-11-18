@@ -1,6 +1,79 @@
 // Bookmark Manager Zero - Sidebar Script
 // Connects to Firefox native bookmarks API
-import { storeEncryptedApiKey, getDecryptedApiKey } from './crypto-utils.js';
+
+// Encryption utilities inlined to avoid module loading issues
+async function getDerivedKey() {
+  const browserInfo = `${navigator.userAgent}-${navigator.language}-${screen.width}x${screen.height}`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(browserInfo);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return await crypto.subtle.importKey(
+    'raw',
+    hashBuffer,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptApiKey(plaintext) {
+  if (!plaintext) return null;
+  try {
+    const key = await getDerivedKey();
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plaintext);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      data
+    );
+    const combined = new Uint8Array(iv.length + encrypted.byteLength);
+    combined.set(iv, 0);
+    combined.set(new Uint8Array(encrypted), iv.length);
+    return btoa(String.fromCharCode(...combined));
+  } catch (error) {
+    console.error('Encryption failed:', error);
+    return null;
+  }
+}
+
+async function decryptApiKey(encrypted) {
+  if (!encrypted) return null;
+  try {
+    const key = await getDerivedKey();
+    const combined = Uint8Array.from(atob(encrypted), c => c.charCodeAt(0));
+    const iv = combined.slice(0, 12);
+    const data = combined.slice(12);
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      data
+    );
+    const decoder = new TextDecoder();
+    return decoder.decode(decrypted);
+  } catch (error) {
+    console.error('Decryption failed:', error);
+    return null;
+  }
+}
+
+async function storeEncryptedApiKey(keyName, apiKey) {
+  const encrypted = await encryptApiKey(apiKey);
+  if (encrypted) {
+    await browser.storage.local.set({ [keyName]: encrypted });
+    return true;
+  }
+  return false;
+}
+
+async function getDecryptedApiKey(keyName) {
+  const result = await browser.storage.local.get(keyName);
+  if (result[keyName]) {
+    return await decryptApiKey(result[keyName]);
+  }
+  return null;
+}
 
 // Check if running in preview mode (no browser API available)
 const isPreviewMode = typeof browser === 'undefined';

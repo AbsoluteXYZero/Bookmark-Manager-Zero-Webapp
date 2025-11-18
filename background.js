@@ -1,6 +1,92 @@
 // This script runs in the background and handles extension tasks.
-import { getDecryptedApiKey } from './crypto-utils.js';
-import { sanitizeUrl } from './url-validator.js';
+
+// Encryption utilities inlined to avoid module loading issues
+async function getDerivedKey() {
+  const browserInfo = `${navigator.userAgent}-${navigator.language}-${screen.width}x${screen.height}`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(browserInfo);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return await crypto.subtle.importKey(
+    'raw',
+    hashBuffer,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function decryptApiKey(encrypted) {
+  if (!encrypted) return null;
+  try {
+    const key = await getDerivedKey();
+    const combined = Uint8Array.from(atob(encrypted), c => c.charCodeAt(0));
+    const iv = combined.slice(0, 12);
+    const data = combined.slice(12);
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      data
+    );
+    const decoder = new TextDecoder();
+    return decoder.decode(decrypted);
+  } catch (error) {
+    console.error('Decryption failed:', error);
+    return null;
+  }
+}
+
+async function getDecryptedApiKey(keyName) {
+  const result = await browser.storage.local.get(keyName);
+  if (result[keyName]) {
+    return await decryptApiKey(result[keyName]);
+  }
+  return null;
+}
+
+// URL validation utilities inlined to avoid module loading issues
+const BLOCKED_SCHEMES = ['file', 'javascript', 'data', 'vbscript', 'about'];
+const PRIVATE_IP_RANGES = [
+  /^127\./, /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./,
+  /^169\.254\./, /^::1$/, /^fe80:/i, /^fc00:/i, /^fd00:/i, /^localhost$/i
+];
+
+function validateUrl(urlString) {
+  if (!urlString || typeof urlString !== 'string') {
+    return { valid: false, error: 'Invalid URL: empty or not a string' };
+  }
+  let url;
+  try {
+    url = new URL(urlString.trim());
+  } catch (error) {
+    return { valid: false, error: 'Invalid URL format' };
+  }
+  const scheme = url.protocol.replace(':', '').toLowerCase();
+  if (BLOCKED_SCHEMES.includes(scheme)) {
+    return { valid: false, error: `Blocked URL scheme: ${scheme}` };
+  }
+  if (scheme !== 'http' && scheme !== 'https') {
+    return { valid: false, error: `Only HTTP and HTTPS URLs are allowed` };
+  }
+  const hostname = url.hostname.toLowerCase();
+  for (const range of PRIVATE_IP_RANGES) {
+    if (range.test(hostname)) {
+      return { valid: false, error: 'Private/internal IP addresses are not allowed' };
+    }
+  }
+  if (url.username || url.password) {
+    return { valid: false, error: 'URLs with credentials are not allowed' };
+  }
+  return { valid: true, url: url.href };
+}
+
+function sanitizeUrl(urlString) {
+  const validation = validateUrl(urlString);
+  if (!validation.valid) {
+    console.warn(`URL validation failed: ${validation.error}`);
+    return null;
+  }
+  return validation.url;
+}
 
 const PARKING_DOMAINS = [
   'hugedomains.com',
