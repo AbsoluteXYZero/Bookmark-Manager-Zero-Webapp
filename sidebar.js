@@ -206,6 +206,7 @@ const settingsMenu = document.getElementById('settingsMenu');
 const openInTabBtn = document.getElementById('openInTabBtn');
 const closeExtensionBtn = document.getElementById('closeExtensionBtn');
 const clearCacheBtn = document.getElementById('clearCacheBtn');
+const autoClearCacheSelect = document.getElementById('autoClearCache');
 const rescanBookmarksBtn = document.getElementById('rescanBookmarksBtn');
 const setApiKeyBtn = document.getElementById('setApiKeyBtn');
 
@@ -241,12 +242,45 @@ async function init() {
   loadCheckingSettings();
   await loadWhitelist();
   await loadSafetyHistory();
+  await loadAutoClearSetting();
   await loadBookmarks();
   setupEventListeners();
   renderBookmarks();
 
   // Automatically check bookmark statuses after initial render
   autoCheckBookmarkStatuses();
+}
+
+// Load and apply auto-clear cache setting
+async function loadAutoClearSetting() {
+  if (isPreviewMode) {
+    return;
+  }
+
+  try {
+    const result = await browser.storage.local.get('autoClearCacheDays');
+    const autoClearDays = result.autoClearCacheDays || '7';
+
+    // Set the select value
+    if (autoClearCacheSelect) {
+      autoClearCacheSelect.value = autoClearDays;
+    }
+
+    // Check if we need to run auto-clear
+    if (autoClearDays !== 'never') {
+      const lastClearResult = await browser.storage.local.get('lastCacheClear');
+      const lastClear = lastClearResult.lastCacheClear || 0;
+      const timeSinceLastClear = Date.now() - lastClear;
+      const clearInterval = 24 * 60 * 60 * 1000; // Check once per day
+
+      // Run auto-clear if it's been more than a day since last check
+      if (timeSinceLastClear > clearInterval) {
+        await clearOldCacheEntries(autoClearDays);
+      }
+    }
+  } catch (error) {
+    console.error('Error loading auto-clear setting:', error);
+  }
 }
 
 // Load theme preference
@@ -3158,6 +3192,128 @@ async function closeExtension() {
 }
 
 // Clear cache for link status and safety checks
+// Calculate cache size in KB
+async function calculateCacheSize() {
+  if (isPreviewMode) {
+    return 0;
+  }
+
+  try {
+    const result = await browser.storage.local.get(['linkStatusCache', 'safetyStatusCache', 'whitelistedUrls', 'safetyHistory']);
+
+    // Calculate size by stringifying the data
+    let totalSize = 0;
+    if (result.linkStatusCache) {
+      totalSize += JSON.stringify(result.linkStatusCache).length;
+    }
+    if (result.safetyStatusCache) {
+      totalSize += JSON.stringify(result.safetyStatusCache).length;
+    }
+    if (result.whitelistedUrls) {
+      totalSize += JSON.stringify(result.whitelistedUrls).length;
+    }
+    if (result.safetyHistory) {
+      totalSize += JSON.stringify(result.safetyHistory).length;
+    }
+
+    // Convert bytes to KB
+    return (totalSize / 1024).toFixed(2);
+  } catch (error) {
+    console.error('Error calculating cache size:', error);
+    return 0;
+  }
+}
+
+// Update cache size display
+async function updateCacheSizeDisplay() {
+  const cacheSizeElement = document.getElementById('cacheSize');
+  if (!cacheSizeElement) return;
+
+  const sizeKB = await calculateCacheSize();
+
+  if (sizeKB === 0) {
+    cacheSizeElement.textContent = 'Empty';
+  } else if (sizeKB < 1) {
+    cacheSizeElement.textContent = '< 1 KB';
+  } else if (sizeKB >= 1024) {
+    const sizeMB = (sizeKB / 1024).toFixed(2);
+    cacheSizeElement.textContent = `${sizeMB} MB`;
+  } else {
+    cacheSizeElement.textContent = `${sizeKB} KB`;
+  }
+}
+
+// Clear old cache entries based on auto-clear setting
+async function clearOldCacheEntries(maxAgeDays) {
+  if (isPreviewMode || maxAgeDays === 'never') {
+    return;
+  }
+
+  try {
+    const maxAgeMs = parseInt(maxAgeDays) * 24 * 60 * 60 * 1000;
+    const cutoffTime = Date.now() - maxAgeMs;
+
+    const result = await browser.storage.local.get(['linkStatusCache', 'safetyStatusCache', 'safetyHistory', 'lastCacheClear']);
+
+    let updated = false;
+
+    // Clear old link status cache entries
+    if (result.linkStatusCache) {
+      const linkCache = result.linkStatusCache;
+      Object.keys(linkCache).forEach(url => {
+        if (linkCache[url].timestamp && linkCache[url].timestamp < cutoffTime) {
+          delete linkCache[url];
+          updated = true;
+        }
+      });
+      if (updated) {
+        await browser.storage.local.set({ linkStatusCache: linkCache });
+      }
+    }
+
+    // Clear old safety status cache entries
+    if (result.safetyStatusCache) {
+      const safetyCache = result.safetyStatusCache;
+      Object.keys(safetyCache).forEach(url => {
+        if (safetyCache[url].timestamp && safetyCache[url].timestamp < cutoffTime) {
+          delete safetyCache[url];
+          updated = true;
+        }
+      });
+      if (updated) {
+        await browser.storage.local.set({ safetyStatusCache: safetyCache });
+      }
+    }
+
+    // Clear old safety history entries
+    if (result.safetyHistory) {
+      const history = result.safetyHistory;
+      Object.keys(history).forEach(url => {
+        if (Array.isArray(history[url])) {
+          history[url] = history[url].filter(entry => entry.timestamp && entry.timestamp >= cutoffTime);
+          if (history[url].length === 0) {
+            delete history[url];
+          }
+          updated = true;
+        }
+      });
+      if (updated) {
+        await browser.storage.local.set({ safetyHistory: history });
+      }
+    }
+
+    // Update last clear timestamp
+    await browser.storage.local.set({ lastCacheClear: Date.now() });
+
+    if (updated) {
+      console.log(`Cleared cache entries older than ${maxAgeDays} days`);
+      await updateCacheSizeDisplay();
+    }
+  } catch (error) {
+    console.error('Error clearing old cache entries:', error);
+  }
+}
+
 async function clearCache() {
   if (isPreviewMode) {
     alert('🧹 In the Firefox extension, this would clear the cache for link and safety checks.');
@@ -3170,6 +3326,9 @@ async function clearCache() {
 
     console.log('Cache cleared successfully');
     alert('Cache cleared! All bookmark checks will be refreshed on next scan.');
+
+    // Update cache size display
+    await updateCacheSizeDisplay();
   } catch (error) {
     console.error('Error clearing cache:', error);
     alert('Failed to clear cache. Please try again.');
@@ -3520,11 +3679,13 @@ function setupEventListeners() {
   });
 
   // Settings menu
-  settingsBtn.addEventListener('click', (e) => {
+  settingsBtn.addEventListener('click', async (e) => {
     e.stopPropagation();
     settingsMenu.classList.toggle('show');
     if (settingsMenu.classList.contains('show')) {
       adjustDropdownPosition(settingsMenu);
+      // Update cache size display when menu opens
+      await updateCacheSizeDisplay();
     }
   });
 
@@ -3544,6 +3705,18 @@ function setupEventListeners() {
   clearCacheBtn.addEventListener('click', async () => {
     await clearCache();
     closeAllMenus();
+  });
+
+  // Auto-clear cache setting
+  autoClearCacheSelect.addEventListener('change', async (e) => {
+    const autoClearDays = e.target.value;
+    await browser.storage.local.set({ autoClearCacheDays: autoClearDays });
+    console.log(`Auto-clear cache set to: ${autoClearDays === 'never' ? 'Never' : autoClearDays + ' days'}`);
+
+    // Run auto-clear immediately if enabled
+    if (autoClearDays !== 'never') {
+      await clearOldCacheEntries(autoClearDays);
+    }
   });
 
   // Link checking toggle

@@ -1403,6 +1403,15 @@
             </span>
             <span>Export Bookmarks (Backup)</span>
           </button>
+          <div style="padding: 8px 16px; font-size: 11px; color: var(--md-sys-color-on-surface-variant); line-height: 1.4;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="color: var(--md-sys-color-on-surface); font-weight: 500;">Cache Size:</span>
+              <span id="cacheSize" style="color: var(--md-sys-color-primary); font-weight: 600;">Calculating...</span>
+            </div>
+            <div style="font-size: 10px; color: var(--md-sys-color-on-surface-variant);">
+              Stores link status, safety checks, and whitelisted URLs
+            </div>
+          </div>
           <button class="action-btn" id="clearCacheBtn">
             <span class="icon">
               <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
@@ -1411,6 +1420,24 @@
             </span>
             <span>Clear Cache</span>
           </button>
+          <label class="action-btn" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="icon">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22C6.47,22 2,17.5 2,12A10,10 0 0,1 12,2M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"/>
+                </svg>
+              </span>
+              <span>Auto-clear old cache</span>
+            </div>
+            <select id="autoClearCache" style="cursor: pointer; padding: 4px 8px; background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); border: 1px solid var(--md-sys-color-outline); border-radius: 4px; font-size: 11px;">
+              <option value="never">Never</option>
+              <option value="1">1 day</option>
+              <option value="3">3 days</option>
+              <option value="7" selected>7 days</option>
+              <option value="14">14 days</option>
+              <option value="30">30 days</option>
+            </select>
+          </label>
           <button class="action-btn" id="rescanBookmarksBtn">
             <span class="icon">
               <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
