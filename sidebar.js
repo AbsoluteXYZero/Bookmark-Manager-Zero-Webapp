@@ -1417,6 +1417,7 @@ function toggleFolder(folderId, folderElement) {
 // Toggle bookmark menu
 function toggleBookmarkMenu(bookmarkDiv) {
   const menu = bookmarkDiv.querySelector('.bookmark-actions');
+  const menuBtn = bookmarkDiv.querySelector('.bookmark-menu-btn');
   const isOpen = menu.classList.contains('show');
 
   // Close all other menus
@@ -1425,12 +1426,36 @@ function toggleBookmarkMenu(bookmarkDiv) {
   // Toggle this menu
   if (!isOpen) {
     menu.classList.add('show');
+
+    // Add mouse event handlers to keep menu open
+    const keepMenuOpen = () => cancelMenuClose();
+    const scheduleClose = () => closeMenusWithDelay(150);
+
+    // Keep menu open when hovering over button or menu
+    menuBtn.addEventListener('mouseenter', keepMenuOpen);
+    menu.addEventListener('mouseenter', keepMenuOpen);
+
+    // Schedule close when leaving button or menu
+    menuBtn.addEventListener('mouseleave', scheduleClose);
+    menu.addEventListener('mouseleave', scheduleClose);
+
+    // Clean up handlers when menu closes
+    const cleanup = () => {
+      menuBtn.removeEventListener('mouseenter', keepMenuOpen);
+      menu.removeEventListener('mouseenter', keepMenuOpen);
+      menuBtn.removeEventListener('mouseleave', scheduleClose);
+      menu.removeEventListener('mouseleave', scheduleClose);
+    };
+
+    // Store cleanup function for later
+    menu._cleanup = cleanup;
   }
 }
 
 // Toggle folder menu
 function toggleFolderMenu(folderDiv) {
   const menu = folderDiv.querySelector('.bookmark-actions');
+  const menuBtn = folderDiv.querySelector('.bookmark-menu-btn');
   const isOpen = menu.classList.contains('show');
 
   // Close all other menus
@@ -1439,6 +1464,29 @@ function toggleFolderMenu(folderDiv) {
   // Toggle this menu
   if (!isOpen) {
     menu.classList.add('show');
+
+    // Add mouse event handlers to keep menu open
+    const keepMenuOpen = () => cancelMenuClose();
+    const scheduleClose = () => closeMenusWithDelay(150);
+
+    // Keep menu open when hovering over button or menu
+    menuBtn.addEventListener('mouseenter', keepMenuOpen);
+    menu.addEventListener('mouseenter', keepMenuOpen);
+
+    // Schedule close when leaving button or menu
+    menuBtn.addEventListener('mouseleave', scheduleClose);
+    menu.addEventListener('mouseleave', scheduleClose);
+
+    // Clean up handlers when menu closes
+    const cleanup = () => {
+      menuBtn.removeEventListener('mouseenter', keepMenuOpen);
+      menu.removeEventListener('mouseenter', keepMenuOpen);
+      menuBtn.removeEventListener('mouseleave', scheduleClose);
+      menu.removeEventListener('mouseleave', scheduleClose);
+    };
+
+    // Store cleanup function for later
+    menu._cleanup = cleanup;
   }
 }
 
@@ -1767,14 +1815,50 @@ function adjustDropdownPosition(dropdown) {
 }
 
 // Close all open menus
+// Track menu close timeout for grace period
+let menuCloseTimeout = null;
+
 function closeAllMenus() {
+  // Clear any pending close timeout
+  if (menuCloseTimeout) {
+    clearTimeout(menuCloseTimeout);
+    menuCloseTimeout = null;
+  }
+
   document.querySelectorAll('.bookmark-actions.show').forEach(menu => {
+    // Clean up mouse event handlers before closing
+    if (menu._cleanup) {
+      menu._cleanup();
+      delete menu._cleanup;
+    }
     menu.classList.remove('show');
   });
   settingsMenu.classList.remove('show');
   themeMenu.classList.remove('show');
   viewMenu.classList.remove('show');
   zoomMenu.classList.remove('show');
+}
+
+// Close menus with a grace period delay
+function closeMenusWithDelay(delay = 150) {
+  // Clear any existing timeout
+  if (menuCloseTimeout) {
+    clearTimeout(menuCloseTimeout);
+  }
+
+  // Set new timeout
+  menuCloseTimeout = setTimeout(() => {
+    closeAllMenus();
+    menuCloseTimeout = null;
+  }, delay);
+}
+
+// Cancel scheduled menu close
+function cancelMenuClose() {
+  if (menuCloseTimeout) {
+    clearTimeout(menuCloseTimeout);
+    menuCloseTimeout = null;
+  }
 }
 
 // Check link status using background script

@@ -549,6 +549,7 @@
       position: absolute;
       top: 100%;
       right: 12px;
+      margin-top: 2px;
       background: var(--md-sys-color-surface);
       border: 1px solid var(--md-sys-color-outline-variant);
       border-radius: 12px;
@@ -558,14 +559,16 @@
       min-width: 180px;
       opacity: 0;
       visibility: hidden;
-      transform: translateY(-8px);
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateY(-2px);
+      transition: opacity 0.15s ease, visibility 0.15s ease, transform 0.15s ease;
+      pointer-events: none;
     }
 
     .bookmark-actions.show {
       opacity: 1;
       visibility: visible;
       transform: translateY(0);
+      pointer-events: auto;
     }
 
     .action-btn {
