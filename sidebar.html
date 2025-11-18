@@ -680,6 +680,24 @@
     }
 
     /* Folder Styles */
+    .folder-item {
+      position: relative;
+      z-index: 1;
+    }
+
+    .folder-item:hover {
+      z-index: 2;
+    }
+
+    /* Boost z-index when folder menu is open */
+    .folder-item:has(.bookmark-actions.show) {
+      z-index: 10000;
+    }
+
+    .folder-item:has(.bookmark-actions.show) .folder-header {
+      transform: none;
+    }
+
     .folder-header {
       padding: 10px 12px;
       cursor: pointer;
