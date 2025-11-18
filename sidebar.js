@@ -3568,36 +3568,58 @@ function setupEventListeners() {
       return;
     }
 
-    // Build list of visible bookmark elements
+    // Build list of visible items (both folders and bookmarks)
+    const folderElements = Array.from(bookmarkList.querySelectorAll('.folder-item .folder-header'));
     const bookmarkElements = Array.from(bookmarkList.querySelectorAll('.bookmark-item'));
 
-    if (bookmarkElements.length === 0) return;
+    // Combine and sort by DOM position
+    const allElements = [...folderElements, ...bookmarkElements].sort((a, b) => {
+      return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+    });
+
+    if (allElements.length === 0) return;
 
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        selectedBookmarkIndex = Math.min(selectedBookmarkIndex + 1, bookmarkElements.length - 1);
-        highlightSelectedBookmark(bookmarkElements);
+        selectedBookmarkIndex = Math.min(selectedBookmarkIndex + 1, allElements.length - 1);
+        highlightSelectedItem(allElements);
         break;
 
       case 'ArrowUp':
         e.preventDefault();
         selectedBookmarkIndex = Math.max(selectedBookmarkIndex - 1, 0);
-        highlightSelectedBookmark(bookmarkElements);
+        highlightSelectedItem(allElements);
         break;
 
       case 'Enter':
         e.preventDefault();
-        if (selectedBookmarkIndex >= 0 && selectedBookmarkIndex < bookmarkElements.length) {
-          // Open the selected bookmark
-          bookmarkElements[selectedBookmarkIndex].click();
+        if (selectedBookmarkIndex >= 0 && selectedBookmarkIndex < allElements.length) {
+          const selectedElement = allElements[selectedBookmarkIndex];
+          // Check if it's a folder header or bookmark
+          if (selectedElement.classList.contains('folder-header')) {
+            // Toggle folder
+            selectedElement.click();
+            // After toggling, rebuild the list and maintain selection
+            setTimeout(() => {
+              const updatedFolders = Array.from(bookmarkList.querySelectorAll('.folder-item .folder-header'));
+              const updatedBookmarks = Array.from(bookmarkList.querySelectorAll('.bookmark-item'));
+              const updatedElements = [...updatedFolders, ...updatedBookmarks].sort((a, b) => {
+                return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+              });
+              highlightSelectedItem(updatedElements);
+            }, 50);
+          } else {
+            // Open bookmark
+            selectedElement.click();
+          }
         }
         break;
 
       case 'Escape':
         // Clear selection
         selectedBookmarkIndex = -1;
-        bookmarkElements.forEach(el => el.style.outline = '');
+        allElements.forEach(el => el.style.outline = '');
         break;
     }
   });
@@ -3612,16 +3634,17 @@ function setupEventListeners() {
   });
 }
 
-// Highlight the selected bookmark for keyboard navigation
-function highlightSelectedBookmark(bookmarkElements) {
-  // Remove highlight from all bookmarks
-  bookmarkElements.forEach(el => el.style.outline = '');
+// Highlight the selected item (folder or bookmark) for keyboard navigation
+function highlightSelectedItem(allElements) {
+  // Remove highlight from all items
+  allElements.forEach(el => el.style.outline = '');
 
-  // Add highlight to selected bookmark
-  if (selectedBookmarkIndex >= 0 && selectedBookmarkIndex < bookmarkElements.length) {
-    const selected = bookmarkElements[selectedBookmarkIndex];
+  // Add highlight to selected item
+  if (selectedBookmarkIndex >= 0 && selectedBookmarkIndex < allElements.length) {
+    const selected = allElements[selectedBookmarkIndex];
     selected.style.outline = '2px solid var(--md-sys-color-primary)';
     selected.style.outlineOffset = '2px';
+    selected.style.borderRadius = '8px';
     // Scroll into view
     selected.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
