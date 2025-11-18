@@ -1328,6 +1328,13 @@ function createFolderElement(folder) {
     toggleFolderMenu(folderDiv);
   });
 
+  // Add right-click context menu support for folder
+  folderDiv.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFolderMenu(folderDiv);
+  });
+
   // Add action button handlers
   actionsMenu.querySelectorAll('.action-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
@@ -1556,6 +1563,13 @@ function createBookmarkElement(bookmark) {
   // Add menu toggle handler
   const menuBtn = bookmarkDiv.querySelector('.bookmark-menu-btn');
   menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleBookmarkMenu(bookmarkDiv);
+  });
+
+  // Add right-click context menu support
+  bookmarkDiv.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
     e.stopPropagation();
     toggleBookmarkMenu(bookmarkDiv);
   });
