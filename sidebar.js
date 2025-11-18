@@ -1282,6 +1282,22 @@ function createFolderElement(folder) {
       <div class="folder-title">${escapeHtml(folderTitle)}</div>
       <button class="bookmark-menu-btn folder-menu-btn" aria-label="More actions for ${escapeHtml(folderTitle)} folder" aria-haspopup="true" aria-expanded="false">⋮</button>
       <div class="bookmark-actions">
+        <button class="action-btn" data-action="add-bookmark">
+          <span class="icon">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+            </svg>
+          </span>
+          <span>Add Bookmark Here</span>
+        </button>
+        <button class="action-btn" data-action="add-subfolder">
+          <span class="icon">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13,19V13H19V11H13V5H11V11H5V13H11V19H13M20,18H22V20H2V18H4V10A2,2 0 0,1 6,8H10V6A2,2 0 0,1 12,4H16A2,2 0 0,1 18,6V8H20A2,2 0 0,1 22,10V18M18,10H6V18H18V10M16,6H12V8H16V6Z"/>
+            </svg>
+          </span>
+          <span>Add Subfolder Here</span>
+        </button>
         <button class="action-btn" data-action="rename">
           <span class="icon">
             <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
@@ -2054,6 +2070,26 @@ function toggleFolderMenu(folderDiv) {
 // Handle folder actions
 async function handleFolderAction(action, folder) {
   switch (action) {
+    case 'add-bookmark':
+      // Open add bookmark modal with this folder pre-selected
+      await openAddBookmarkModal();
+      // Pre-select this folder
+      const folderSelect = document.getElementById('newBookmarkFolder');
+      if (folderSelect) {
+        folderSelect.value = folder.id;
+      }
+      break;
+
+    case 'add-subfolder':
+      // Open add folder modal with this folder pre-selected as parent
+      openAddFolderModal();
+      // Pre-select this folder as parent
+      const parentSelect = document.getElementById('newFolderParent');
+      if (parentSelect) {
+        parentSelect.value = folder.id;
+      }
+      break;
+
     case 'rename':
       openEditModal(folder, true);
       break;
