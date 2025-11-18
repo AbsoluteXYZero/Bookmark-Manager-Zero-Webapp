@@ -393,7 +393,8 @@ let displayOptions = {
   url: true,
   liveStatus: true,
   safetyStatus: true,
-  preview: true
+  preview: true,
+  favicon: true
 };
 let currentEditItem = null;
 let zoomLevel = 100;
@@ -1414,6 +1415,15 @@ function createBookmarkElement(bookmark) {
     statusIndicatorsHtml += getShieldHtml(safetyStatus, bookmark.url, safetySources);
   }
 
+  // Build favicon HTML based on display options
+  let faviconHtml = '';
+  if (displayOptions.favicon && bookmark.url) {
+    const faviconUrl = getFaviconUrl(bookmark.url);
+    if (faviconUrl) {
+      faviconHtml = `<img class="bookmark-favicon" src="${escapeHtml(faviconUrl)}" alt="" onerror="this.style.display='none'" />`;
+    }
+  }
+
   // Build bookmark info HTML based on display options
   let bookmarkInfoHtml = '';
   if (displayOptions.title) {
@@ -1430,6 +1440,7 @@ function createBookmarkElement(bookmark) {
     <div class="status-indicators">
       ${statusIndicatorsHtml}
     </div>
+    ${faviconHtml}
     <div class="bookmark-info">
       ${bookmarkInfoHtml}
     </div>
@@ -3916,6 +3927,12 @@ function setupEventListeners() {
       return;
     }
     displayOptions.url = e.target.checked;
+    renderBookmarks();
+  });
+
+  const displayFavicon = document.getElementById('displayFavicon');
+  displayFavicon.addEventListener('change', (e) => {
+    displayOptions.favicon = e.target.checked;
     renderBookmarks();
   });
 
