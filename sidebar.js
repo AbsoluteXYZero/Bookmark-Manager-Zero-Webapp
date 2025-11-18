@@ -889,6 +889,9 @@ function createFolderElement(folder) {
 function createBookmarkElement(bookmark) {
   const bookmarkDiv = document.createElement('div');
   bookmarkDiv.className = 'bookmark-item';
+  if (!displayOptions.preview) {
+    bookmarkDiv.classList.add('no-preview');
+  }
   bookmarkDiv.dataset.id = bookmark.id;
   bookmarkDiv.draggable = true;
 
