@@ -13,7 +13,10 @@ let theme = 'blue-dark';
 let viewMode = 'list';
 let displayOptions = {
   title: true,
-  url: true
+  url: true,
+  liveStatus: true,
+  safetyStatus: true,
+  preview: true
 };
 let currentEditItem = null;
 let zoomLevel = 100;
@@ -894,9 +897,14 @@ function createBookmarkElement(bookmark) {
   const safetyStatus = bookmark.safetyStatus || 'unknown';
   const safetySources = bookmark.safetySources || [];
 
-  // Build status indicators HTML
-  const statusDotHtml = getStatusDotHtml(linkStatus);
-  const shieldHtml = getShieldHtml(safetyStatus, bookmark.url, safetySources);
+  // Build status indicators HTML based on display options
+  let statusIndicatorsHtml = '';
+  if (displayOptions.liveStatus) {
+    statusIndicatorsHtml += getStatusDotHtml(linkStatus);
+  }
+  if (displayOptions.safetyStatus) {
+    statusIndicatorsHtml += getShieldHtml(safetyStatus, bookmark.url, safetySources);
+  }
 
   // Build bookmark info HTML based on display options
   let bookmarkInfoHtml = '';
@@ -909,8 +917,7 @@ function createBookmarkElement(bookmark) {
 
   bookmarkDiv.innerHTML = `
     <div class="status-indicators">
-      ${statusDotHtml}
-      ${shieldHtml}
+      ${statusIndicatorsHtml}
     </div>
     <div class="bookmark-info">
       ${bookmarkInfoHtml}
@@ -1069,70 +1076,72 @@ function createBookmarkElement(bookmark) {
     await handleDrop(draggedId, bookmark.id, bookmarkDiv, { dropBefore, dropAfter, dropInto: false });
   });
 
-  // Preview hover handler - load image on first hover
-  const previewContainer = bookmarkDiv.querySelector('.bookmark-preview-container');
-  const previewImage = bookmarkDiv.querySelector('.preview-image');
-  const previewLoading = bookmarkDiv.querySelector('.preview-loading');
+  // Preview hover handler - load image on first hover (only if preview is enabled)
+  if (displayOptions.preview) {
+    const previewContainer = bookmarkDiv.querySelector('.bookmark-preview-container');
+    const previewImage = bookmarkDiv.querySelector('.preview-image');
+    const previewLoading = bookmarkDiv.querySelector('.preview-loading');
 
-  // Check if preview was already loaded using global state
-  const previewKey = bookmark.id || bookmark.url;
-  const previewAlreadyLoaded = loadedPreviews.has(previewKey);
+    // Check if preview was already loaded using global state
+    const previewKey = bookmark.id || bookmark.url;
+    const previewAlreadyLoaded = loadedPreviews.has(previewKey);
 
-  // If preview was already loaded, set the image src immediately
-  if (previewAlreadyLoaded && bookmark.url) {
-    const previewUrl = getPreviewUrl(bookmark.url);
-    if (previewUrl) {
-      previewImage.src = previewUrl;
-      previewLoading.style.display = 'none';
-    }
-  }
-
-  // Prevent all interactions with preview (clicks, drags, context menu)
-  previewContainer.addEventListener('click', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-  });
-
-  previewContainer.addEventListener('mousedown', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-  });
-
-  previewContainer.addEventListener('contextmenu', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-  });
-
-  previewImage.addEventListener('dragstart', (e) => {
-    e.preventDefault();
-  });
-
-  bookmarkDiv.addEventListener('mouseenter', () => {
-    if (!loadedPreviews.has(previewKey) && bookmark.url) {
+    // If preview was already loaded, set the image src immediately
+    if (previewAlreadyLoaded && bookmark.url) {
       const previewUrl = getPreviewUrl(bookmark.url);
-
       if (previewUrl) {
-        previewLoading.style.display = 'flex';
-        previewLoading.textContent = 'Loading...';
-
-        previewImage.onload = () => {
-          previewLoading.style.display = 'none';
-          previewImage.classList.add('loaded');
-          loadedPreviews.add(previewKey); // Mark as loaded in global state
-        };
-
-        previewImage.onerror = () => {
-          previewLoading.textContent = 'No preview';
-          loadedPreviews.add(previewKey); // Mark as loaded even on error
-        };
-
         previewImage.src = previewUrl;
-      } else {
-        previewLoading.textContent = 'No preview';
-        loadedPreviews.add(previewKey); // Mark as loaded
+        previewLoading.style.display = 'none';
       }
     }
-  });
+
+    // Prevent all interactions with preview (clicks, drags, context menu)
+    previewContainer.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    });
+
+    previewContainer.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    });
+
+    previewContainer.addEventListener('contextmenu', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    });
+
+    previewImage.addEventListener('dragstart', (e) => {
+      e.preventDefault();
+    });
+
+    bookmarkDiv.addEventListener('mouseenter', () => {
+      if (!loadedPreviews.has(previewKey) && bookmark.url) {
+        const previewUrl = getPreviewUrl(bookmark.url);
+
+        if (previewUrl) {
+          previewLoading.style.display = 'flex';
+          previewLoading.textContent = 'Loading...';
+
+          previewImage.onload = () => {
+            previewLoading.style.display = 'none';
+            previewImage.classList.add('loaded');
+            loadedPreviews.add(previewKey); // Mark as loaded in global state
+          };
+
+          previewImage.onerror = () => {
+            previewLoading.textContent = 'No preview';
+            loadedPreviews.add(previewKey); // Mark as loaded even on error
+          };
+
+          previewImage.src = previewUrl;
+        } else {
+          previewLoading.textContent = 'No preview';
+          loadedPreviews.add(previewKey); // Mark as loaded
+        }
+      }
+    });
+  }
 
   return bookmarkDiv;
 }
@@ -2880,6 +2889,25 @@ function setupEventListeners() {
       return;
     }
     displayOptions.url = e.target.checked;
+    renderBookmarks();
+  });
+
+  const displayLiveStatus = document.getElementById('displayLiveStatus');
+  const displaySafetyStatus = document.getElementById('displaySafetyStatus');
+  const displayPreview = document.getElementById('displayPreview');
+
+  displayLiveStatus.addEventListener('change', (e) => {
+    displayOptions.liveStatus = e.target.checked;
+    renderBookmarks();
+  });
+
+  displaySafetyStatus.addEventListener('change', (e) => {
+    displayOptions.safetyStatus = e.target.checked;
+    renderBookmarks();
+  });
+
+  displayPreview.addEventListener('change', (e) => {
+    displayOptions.preview = e.target.checked;
     renderBookmarks();
   });
 
