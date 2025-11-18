@@ -443,6 +443,53 @@ const updateBlocklistDatabase = async () => {
   }
 };
 
+// Check for suspicious URL patterns that aren't necessarily malicious but warrant caution
+const checkSuspiciousPatterns = (url, domain) => {
+  const patterns = [];
+
+  // 1. Check for HTTP-only (no encryption)
+  if (url.toLowerCase().startsWith('http://')) {
+    patterns.push('HTTP Only (Unencrypted)');
+  }
+
+  // 2. Check for known URL shorteners
+  const urlShorteners = [
+    'bit.ly', 'tinyurl.com', 'goo.gl', 't.co', 'ow.ly', 'is.gd', 'buff.ly',
+    'adf.ly', 'bl.ink', 'lnkd.in', 'short.link', 'cutt.ly', 'rebrand.ly',
+    'tiny.cc', 'rb.gy', 'clck.ru', 'shorturl.at', 'v.gd'
+  ];
+
+  const domainWithoutPort = domain.split(':')[0];
+  if (urlShorteners.includes(domainWithoutPort)) {
+    patterns.push('URL Shortener');
+  }
+
+  // 3. Check for suspicious TLDs (commonly abused)
+  const suspiciousTlds = [
+    '.xyz', '.top', '.tk', '.ml', '.ga', '.cf', '.gq', '.pw', '.cc', '.ws',
+    '.info', '.biz', '.club', '.click', '.link', '.download', '.stream',
+    '.loan', '.win', '.bid', '.trade', '.racing', '.party', '.review',
+    '.science', '.work', '.date', '.faith', '.cricket', '.accountant'
+  ];
+
+  for (const tld of suspiciousTlds) {
+    if (domainWithoutPort.endsWith(tld)) {
+      patterns.push('Suspicious TLD');
+      break;
+    }
+  }
+
+  // 4. Check for IP addresses instead of domain names
+  const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/;
+  const ipv6Pattern = /^\[?([0-9a-f:]+)\]?(:\d+)?$/i;
+
+  if (ipv4Pattern.test(domainWithoutPort) || ipv6Pattern.test(domainWithoutPort)) {
+    patterns.push('IP Address');
+  }
+
+  return patterns;
+};
+
 // Check URL safety using aggregated blocklist database
 const checkURLSafety = async (url) => {
   // Check cache first
@@ -528,7 +575,16 @@ const checkURLSafety = async (url) => {
       }
     }
 
-    // Both checks passed (or Google SB not configured)
+    // Not malicious, but check for suspicious patterns
+    const suspiciousPatterns = checkSuspiciousPatterns(url, domain);
+    if (suspiciousPatterns.length > 0) {
+      console.log(`[Safety Check] Suspicious patterns detected: ${suspiciousPatterns.join(', ')}`);
+      result = 'warning';
+      await setCachedResult(url, result, 'safetyStatusCache');
+      return { status: result, sources: suspiciousPatterns };
+    }
+
+    // Both checks passed (or Google SB not configured) and no suspicious patterns
     result = 'safe';
     console.log(`[Safety Check] Final result for ${url}: ${result}`);
     await setCachedResult(url, result, 'safetyStatusCache');
