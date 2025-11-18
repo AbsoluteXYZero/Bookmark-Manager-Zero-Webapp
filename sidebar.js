@@ -935,8 +935,14 @@ function createFolderElement(folder) {
   const actionsMenu = header.querySelector('.bookmark-actions');
 
   header.addEventListener('click', (e) => {
-    // Don't toggle if clicking menu button or menu items
-    if (e.target.closest('.folder-menu-btn') || e.target.closest('.bookmark-actions')) {
+    // Don't toggle if clicking menu button, menu items, or checkbox
+    if (e.target.closest('.folder-menu-btn') ||
+        e.target.closest('.bookmark-actions') ||
+        e.target.closest('.item-checkbox')) {
+      return;
+    }
+    // In multi-select mode, don't toggle folder
+    if (multiSelectMode) {
       return;
     }
     toggleFolder(folder.id, folderDiv);
@@ -1135,11 +1141,16 @@ function createBookmarkElement(bookmark) {
 
   // Add click handler for bookmark (open in current tab)
   bookmarkDiv.addEventListener('click', (e) => {
-    // Don't open if clicking on menu, actions, preview, or status indicators
+    // Don't open if clicking on menu, actions, preview, status indicators, or checkbox
     if (e.target.closest('.bookmark-menu-btn') ||
         e.target.closest('.bookmark-actions') ||
         e.target.closest('.bookmark-preview-container') ||
-        e.target.closest('.status-indicators')) {
+        e.target.closest('.status-indicators') ||
+        e.target.closest('.item-checkbox')) {
+      return;
+    }
+    // Don't open if in multi-select mode
+    if (multiSelectMode) {
       return;
     }
     // Open in active tab
