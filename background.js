@@ -167,14 +167,20 @@ const checkLinkStatus = async (url) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
 
+  // Use a standard browser User-Agent to avoid being blocked
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  };
+
   try {
     // Try HEAD request first (lighter weight)
+    // Note: Don't use mode: 'cors' - background scripts have broader permissions
     const response = await fetch(url, {
       method: 'HEAD',
       signal: controller.signal,
-      mode: 'cors',
       credentials: 'omit',
-      redirect: 'follow'
+      redirect: 'follow',
+      headers: headers
     });
     clearTimeout(timeoutId);
 
@@ -198,9 +204,9 @@ const checkLinkStatus = async (url) => {
         const contentResponse = await fetch(url, {
           method: 'GET',
           signal: contentController.signal,
-          mode: 'cors',
           credentials: 'omit',
-          redirect: 'follow'
+          redirect: 'follow',
+          headers: headers
         });
         clearTimeout(contentTimeout);
 
@@ -209,47 +215,68 @@ const checkLinkStatus = async (url) => {
           const html = await contentResponse.text();
           const htmlLower = html.toLowerCase();
 
-          // Check for parking page indicators
-          const parkingIndicators = [
+          // Real websites typically have substantial content
+          // Parked pages are usually very simple (<30KB)
+          const contentSize = html.length;
+          const isSubstantialContent = contentSize > 30000;
+
+          // Strong indicators - if any match, definitely parked
+          const strongParkingIndicators = [
+            'sedo domain parking',
+            'this domain is parked',
+            'domain is parked',
+            'parked by',
+            'parked domain',
+            'parkingcrew',
+            'bodis.com',
+            'hugedomains.com/domain',
+            'afternic.com/forsale',
+            'this domain name is for sale',
+            'the domain name is for sale',
+            'buy this domain name',
+            'domain has expired',
+            'this domain has been registered'
+          ];
+
+          // If any strong indicator matches, it's parked
+          if (strongParkingIndicators.some(indicator => htmlLower.includes(indicator))) {
+            result = 'parked';
+            await setCachedResult(url, result, 'linkStatusCache');
+            return result;
+          }
+
+          // Skip weak indicator check for substantial content (real websites)
+          if (isSubstantialContent) {
+            result = 'live';
+            await setCachedResult(url, result, 'linkStatusCache');
+            return result;
+          }
+
+          // Weak indicators - need 3+ matches on small pages
+          const weakParkingIndicators = [
             'domain for sale',
             'buy this domain',
             'domain is for sale',
             'this domain may be for sale',
-            'this domain is for sale',
-            'premium domain',
-            'parked free',
-            'domain parking',
-            'parked domain',
-            'buy now',
             'make an offer',
             'make offer',
             'expired domain',
-            'domain expired',
             'register this domain',
             'purchase this domain',
             'acquire this domain',
-            'get this domain',
-            'domain is parked',
-            'parking page',
             'coming soon',
             'under construction',
-            'sedo domain parking',
-            'sedo.com',
-            'afternic.com/forsale',
-            'afternic.com',
-            'hugedomains.com',
-            'bodis.com',
-            'parkingcrew',
-            'domain name is for sale',
             'inquire about this domain',
             'interested in this domain',
-            'domain may be for sale',
-            'brandable domain',
-            'premium domains',
-            'domain broker'
+            'domain may be for sale'
           ];
 
-          if (parkingIndicators.some(indicator => htmlLower.includes(indicator))) {
+          const matchCount = weakParkingIndicators.filter(indicator =>
+            htmlLower.includes(indicator)
+          ).length;
+
+          // Require 3+ weak indicators on small pages
+          if (matchCount >= 3) {
             result = 'parked';
             await setCachedResult(url, result, 'linkStatusCache');
             return result;
@@ -267,7 +294,46 @@ const checkLinkStatus = async (url) => {
       return result;
     }
 
-    // 4xx or 5xx error means the link is dead
+    // Check if it's a Cloudflare-protected site
+    const serverHeader = response.headers.get('server');
+    const cfRay = response.headers.get('cf-ray');
+
+    if (serverHeader?.toLowerCase().includes('cloudflare') || cfRay) {
+      // Cloudflare is fronting this domain - site is configured and live
+      // Even with 4xx/5xx errors, the domain is valid and accessible
+      // (403 often means the site blocks direct requests but works in browser)
+      console.log(`[Link Check] Cloudflare detected for ${url} (status ${response.status}), marking as live`);
+      result = 'live';
+      await setCachedResult(url, result, 'linkStatusCache');
+      return result;
+    }
+
+    // 4xx errors (except 404, 410, 451) often mean the site is blocking automated requests
+    // but the site itself is live and accessible in a browser
+    // 403 = Forbidden (often blocks bots), 401 = Unauthorized (needs login), 405 = Method Not Allowed
+    const liveButBlocking = [401, 403, 405, 406, 429];
+    if (liveButBlocking.includes(response.status)) {
+      console.log(`[Link Check] ${url} returned ${response.status}, likely blocking automated requests - marking as live`);
+      result = 'live';
+      await setCachedResult(url, result, 'linkStatusCache');
+      return result;
+    }
+
+    // 5xx errors could be temporary server issues - try GET fallback before marking dead
+    if (response.status >= 500) {
+      console.log(`[Link Check] ${url} returned ${response.status}, will try GET fallback`);
+      // Fall through to catch block logic by throwing
+      throw new Error(`Server error ${response.status}`);
+    }
+
+    // 404 from HEAD might be a site that doesn't support HEAD - try GET fallback
+    if (response.status === 404) {
+      console.log(`[Link Check] ${url} returned 404 on HEAD, trying GET fallback`);
+      throw new Error(`HEAD returned 404`);
+    }
+
+    // 410 (Gone), 451 (Legal) - these indicate the content is truly gone
+    console.log(`[Link Check] ${url} returned ${response.status}, marking as dead`);
     result = 'dead';
     await setCachedResult(url, result, 'linkStatusCache');
     return result;
@@ -275,7 +341,17 @@ const checkLinkStatus = async (url) => {
   } catch (error) {
     clearTimeout(timeoutId);
 
-    // If HEAD fails, try GET with no-cors as fallback
+    console.log(`[Link Check] HEAD failed for ${url}:`, error.name, error.message);
+
+    // If HEAD timed out or was aborted, mark as live (slow server, not dead)
+    if (error.name === 'AbortError' || error.message?.includes('abort')) {
+      console.log(`[Link Check] HEAD request timed out for ${url}, marking as live (slow server)`);
+      result = 'live';
+      await setCachedResult(url, result, 'linkStatusCache');
+      return result;
+    }
+
+    // If HEAD fails for other reasons, try GET as fallback
     try {
       const fallbackController = new AbortController();
       const fallbackTimeout = setTimeout(() => fallbackController.abort(), 8000);
@@ -283,18 +359,55 @@ const checkLinkStatus = async (url) => {
       const fallbackResponse = await fetch(url, {
         method: 'GET',
         signal: fallbackController.signal,
-        mode: 'no-cors',
         credentials: 'omit',
-        redirect: 'follow'
+        redirect: 'follow',
+        headers: headers
       });
       clearTimeout(fallbackTimeout);
 
-      // no-cors mode returns opaque response, but if fetch succeeds, link is likely live
-      result = 'live';
+      // Check for Cloudflare on fallback response too
+      const fbServerHeader = fallbackResponse.headers.get('server');
+      const fbCfRay = fallbackResponse.headers.get('cf-ray');
+
+      if (fbServerHeader?.toLowerCase().includes('cloudflare') || fbCfRay) {
+        console.log(`[Link Check] Cloudflare detected on fallback for ${url}, marking as live`);
+        result = 'live';
+        await setCachedResult(url, result, 'linkStatusCache');
+        return result;
+      }
+
+      // Only mark as live if GET returned a successful response
+      if (fallbackResponse.ok) {
+        console.log(`[Link Check] GET fallback succeeded for ${url}, marking as live`);
+        result = 'live';
+        await setCachedResult(url, result, 'linkStatusCache');
+        return result;
+      }
+
+      // GET also returned an error - site is dead
+      console.log(`[Link Check] GET fallback returned ${fallbackResponse.status} for ${url}, marking as dead`);
+      result = 'dead';
       await setCachedResult(url, result, 'linkStatusCache');
       return result;
     } catch (fallbackError) {
-      // Both HEAD and GET failed - link is likely dead
+      // Check if it was a timeout (AbortError) - timeouts often mean slow server, not dead
+      if (fallbackError.name === 'AbortError') {
+        console.log(`[Link Check] Request timed out for ${url}, marking as live (slow server)`);
+        result = 'live';
+        await setCachedResult(url, result, 'linkStatusCache');
+        return result;
+      }
+
+      // NetworkError usually means CORS blocked the request - site exists but blocks cross-origin
+      // This is common for legitimate sites with strict security policies
+      if (fallbackError.message?.includes('NetworkError') || fallbackError.name === 'TypeError') {
+        console.log(`[Link Check] NetworkError for ${url}, likely CORS restriction - marking as live`);
+        result = 'live';
+        await setCachedResult(url, result, 'linkStatusCache');
+        return result;
+      }
+
+      // Other errors (DNS errors, truly unreachable) mean the link is dead
       console.warn('Link check failed for:', url, fallbackError.message);
       result = 'dead';
       await setCachedResult(url, result, 'linkStatusCache');
@@ -307,6 +420,7 @@ const checkLinkStatus = async (url) => {
 let maliciousUrlsSet = new Set();
 let domainSourceMap = new Map(); // Track which source(s) flagged each domain
 let blocklistLastUpdate = 0;
+let blocklistLoading = false; // Flag to prevent duplicate loads
 const BLOCKLIST_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 
 // Blocklist sources - all free, no API keys required
@@ -591,6 +705,14 @@ const downloadBlocklistSource = async (source) => {
 
 // Download and aggregate all blocklist sources
 const updateBlocklistDatabase = async () => {
+  // Prevent duplicate loads
+  if (blocklistLoading) {
+    console.log(`[Blocklist] Already loading, skipping duplicate request`);
+    return true;
+  }
+
+  blocklistLoading = true;
+
   try {
     console.log(`[Blocklist] Starting update from ${BLOCKLIST_SOURCES.length} sources...`);
 
@@ -635,9 +757,11 @@ const updateBlocklistDatabase = async () => {
       blocklistLastUpdate: blocklistLastUpdate
     });
 
+    blocklistLoading = false;
     return true;
   } catch (error) {
     console.error(`[Blocklist] Error updating database:`, error);
+    blocklistLoading = false;
     return false;
   }
 };
@@ -704,6 +828,13 @@ const checkURLSafety = async (url) => {
   let result;
 
   try {
+    // If database is currently loading, return unknown without caching
+    // This prevents blocking while the startup preload completes
+    if (blocklistLoading) {
+      console.log(`[Blocklist] Database still loading, returning unknown (will recheck later)`);
+      return { status: 'unknown', sources: [] };
+    }
+
     // Update database if needed (once per 24 hours)
     const now = Date.now();
     if (now - blocklistLastUpdate > BLOCKLIST_UPDATE_INTERVAL) {
@@ -711,15 +842,15 @@ const checkURLSafety = async (url) => {
       await updateBlocklistDatabase();
     }
 
-    // If database is empty, try to load it
-    if (maliciousUrlsSet.size === 0) {
+    // If database is empty and not loading, try to load it
+    if (maliciousUrlsSet.size === 0 && !blocklistLoading) {
       console.log(`[Blocklist] Database empty, loading...`);
       const success = await updateBlocklistDatabase();
       if (!success) {
         console.log(`[Blocklist] Could not load database, returning unknown`);
         result = 'unknown';
         await setCachedResult(url, result, 'safetyStatusCache');
-        return result;
+        return { status: result, sources: [] };
       }
     }
 
@@ -888,3 +1019,18 @@ try {
 } catch (error) {
   console.error("Error setting up browser action listener:", error);
 }
+
+// Preload blocklist database on extension startup
+// This ensures the database is ready when the sidebar opens
+(async () => {
+  console.log('[Startup] Preloading blocklist database...');
+  const startTime = Date.now();
+
+  try {
+    await updateBlocklistDatabase();
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(`[Startup] Blocklist database loaded in ${elapsed}s with ${maliciousUrlsSet.size} entries`);
+  } catch (error) {
+    console.error('[Startup] Failed to preload blocklist database:', error);
+  }
+})();

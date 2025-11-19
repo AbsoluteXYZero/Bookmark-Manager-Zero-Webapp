@@ -85,7 +85,7 @@
     .header {
       background: linear-gradient(135deg, var(--md-sys-color-surface) 0%, var(--md-sys-color-surface-variant) 100%);
       backdrop-filter: blur(20px);
-      padding: 16px 12px 12px;
+      padding: 8px 8px 6px;
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
       position: sticky;
       top: 0;
@@ -95,24 +95,24 @@
 
     .header-settings {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 6px;
+      right: 8px;
       z-index: 101;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
     }
 
     .logo-container {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 6px;
+      margin-bottom: 8px;
     }
 
     .logo-icon {
-      width: 48px;
-      height: 48px;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -120,9 +120,9 @@
     }
 
     .logo-icon svg {
-      width: 48px;
-      height: 48px;
-      filter: drop-shadow(0 2px 8px rgba(34, 197, 94, 0.3));
+      width: 24px;
+      height: 24px;
+      filter: drop-shadow(0 1px 4px rgba(34, 197, 94, 0.3));
     }
 
     .logo-text {
@@ -130,17 +130,17 @@
     }
 
     .logo-title {
-      font-size: 16px;
+      font-size: 11px;
       font-weight: 500;
       color: var(--md-sys-color-on-surface);
       line-height: 1.2;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.3px;
     }
 
     .logo-subtitle {
-      font-size: 11px;
+      font-size: 8px;
       color: var(--md-sys-color-on-surface-variant);
-      margin-top: 2px;
+      margin-top: 1px;
       letter-spacing: 0.1px;
     }
 
@@ -179,17 +179,17 @@
 
     .search-container {
       position: relative;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
     }
 
     .search-input {
       width: 100%;
-      padding: 12px 16px 12px 40px;
+      padding: 6px 10px 6px 28px;
       border: none;
-      border-radius: 20px;
+      border-radius: 12px;
       background: var(--md-sys-color-surface-container);
       color: var(--md-sys-color-on-surface);
-      font-size: 13px;
+      font-size: 10px;
       outline: none;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: var(--md-elevation-1);
@@ -202,17 +202,17 @@
 
     .search-icon {
       position: absolute;
-      left: 14px;
+      left: 8px;
       top: 50%;
       transform: translateY(-50%);
       color: var(--md-sys-color-on-surface-variant);
-      width: 16px;
-      height: 16px;
+      width: 12px;
+      height: 12px;
     }
 
     .toolbar {
       display: flex;
-      gap: 8px;
+      gap: 4px;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
@@ -220,25 +220,25 @@
 
     .toolbar-left, .toolbar-right {
       display: flex;
-      gap: 6px;
+      gap: 3px;
       align-items: center;
     }
 
     .btn {
-      padding: 8px 12px;
+      padding: 4px 6px;
       border: none;
-      border-radius: 16px;
+      border-radius: 8px;
       background: var(--md-sys-color-surface-container);
       color: var(--md-sys-color-on-surface);
       cursor: pointer;
-      font-size: 12px;
+      font-size: 9px;
       font-weight: 500;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 3px;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: var(--md-elevation-1);
-      letter-spacing: 0.2px;
+      letter-spacing: 0.1px;
     }
 
     .btn:hover {
@@ -258,8 +258,8 @@
     }
 
     .btn-icon {
-      width: 36px;
-      height: 36px;
+      width: 20px;
+      height: 20px;
       padding: 0;
       justify-content: center;
       border-radius: 50%;
@@ -268,8 +268,49 @@
     .content {
       flex: 1;
       overflow-y: auto;
-      padding: 12px;
+      padding: 6px;
       scroll-behavior: smooth;
+    }
+
+    /* Scan Status Bar */
+    .scan-status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 8px;
+      background: var(--md-sys-color-surface-variant);
+      border-top: 1px solid var(--md-sys-color-outline-variant);
+      font-size: 9px;
+      color: var(--md-sys-color-on-surface-variant);
+    }
+
+    .scan-status-bar .status-text {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .scan-status-bar .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--md-sys-color-outline);
+      color: var(--md-sys-color-surface);
+      font-size: 7px;
+      font-weight: bold;
+      cursor: help;
+      margin-left: 3px;
+    }
+
+    .scan-status-bar .scan-progress {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .scan-status-bar.scanning .scan-progress {
+      color: var(--md-sys-color-primary);
     }
 
     /* Bookmark Item Styles */
@@ -861,38 +902,38 @@
     .filters {
       background: transparent;
       border-bottom: none;
-      padding: 10px 12px;
+      padding: 5px 8px;
       overflow: hidden;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      max-height: 80px;
+      max-height: 50px;
       opacity: 1;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 6px;
+      gap: 3px;
     }
 
     .filters.hidden {
       max-height: 0;
       opacity: 0;
-      padding: 0 12px;
+      padding: 0 8px;
       border-bottom: none;
     }
 
     .filter-chip {
       background: var(--md-sys-color-surface-container);
       border: 1px solid transparent;
-      border-radius: 10px;
-      padding: 5px 10px;
+      border-radius: 6px;
+      padding: 3px 6px;
       cursor: pointer;
-      font-size: 11px;
+      font-size: 8px;
       font-weight: 500;
       color: var(--md-sys-color-on-surface);
       white-space: nowrap;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 3px;
       box-shadow: var(--md-elevation-1);
     }
 
@@ -920,13 +961,13 @@
     .display-toggle {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 3px;
       background: var(--md-sys-color-surface-container);
       border: 1px solid transparent;
-      border-radius: 10px;
-      padding: 5px 10px;
+      border-radius: 6px;
+      padding: 3px 6px;
       cursor: pointer;
-      font-size: 11px;
+      font-size: 8px;
       font-weight: 500;
       color: var(--md-sys-color-on-surface);
       white-space: nowrap;
@@ -943,8 +984,8 @@
     }
 
     .display-toggle input[type="checkbox"] {
-      width: 14px;
-      height: 14px;
+      width: 10px;
+      height: 10px;
       cursor: pointer;
       accent-color: var(--md-sys-color-primary);
     }
@@ -1904,6 +1945,15 @@
     <div style="text-align: center; padding: 40px 20px; color: var(--md-sys-color-on-surface-variant);">
       <div style="font-size: 14px;">Loading bookmarks...</div>
     </div>
+  </div>
+
+  <!-- Scan Status Bar -->
+  <div class="scan-status-bar" id="scanStatusBar">
+    <div class="status-text">
+      <span class="scan-progress" id="scanProgress">Ready</span>
+      <span class="info-icon" title="Scans bookmarks on-demand as you expand folders&#10;Scans 5 bookmarks every 300ms">i</span>
+    </div>
+    <div class="total-count" id="totalCount">0 bookmarks</div>
   </div>
 
   <!-- Edit Modal -->

@@ -397,7 +397,7 @@ let displayOptions = {
   favicon: true
 };
 let currentEditItem = null;
-let zoomLevel = 100;
+let zoomLevel = 80;
 let checkedBookmarks = new Set(); // Track which bookmarks have been checked to prevent infinite loops
 let scanCancelled = false; // Flag to cancel ongoing scans
 let linkCheckingEnabled = true; // Toggle for link checking
@@ -453,6 +453,11 @@ const undoMessage = document.getElementById('undoMessage');
 const undoButton = document.getElementById('undoButton');
 const undoCountdownEl = document.getElementById('undoCountdown');
 const undoDismiss = document.getElementById('undoDismiss');
+
+// Scan status bar DOM elements
+const scanStatusBar = document.getElementById('scanStatusBar');
+const scanProgress = document.getElementById('scanProgress');
+const totalCount = document.getElementById('totalCount');
 
 // Initialize
 async function init() {
@@ -592,13 +597,13 @@ function setView(newView) {
 // Load zoom preference
 function loadZoom() {
   if (isPreviewMode) {
-    zoomLevel = 100;
+    zoomLevel = 80;
     applyZoom();
     return;
   }
 
   safeStorage.get('zoomLevel').then(result => {
-    zoomLevel = result.zoomLevel || 100;
+    zoomLevel = result.zoomLevel || 80;
     applyZoom();
     updateZoomDisplay();
   });
@@ -733,16 +738,27 @@ async function autoCheckBookmarkStatuses() {
 
   traverse(bookmarkTree, true);
 
-  if (bookmarksToCheck.length === 0) return;
+  if (bookmarksToCheck.length === 0) {
+    // Update status bar to show ready state
+    if (scanProgress) scanProgress.textContent = 'Ready';
+    if (scanStatusBar) scanStatusBar.classList.remove('scanning');
+    return;
+  }
 
   console.log(`Auto-checking ${bookmarksToCheck.length} bookmarks in batches...`);
 
   // Mark these bookmarks as being checked to prevent re-checking
   bookmarksToCheck.forEach(item => checkedBookmarks.add(item.id));
 
-  // Process bookmarks in batches to prevent browser overload
+  // Process bookmarks in batches to prevent browser/network overload
   const BATCH_SIZE = 5; // Check 5 bookmarks at a time
-  const BATCH_DELAY = 1000; // 1 second delay between batches
+  const BATCH_DELAY = 300; // 300ms delay between batches (balance speed vs network load)
+
+  // Update status bar to show scanning state
+  const totalToScan = bookmarksToCheck.length;
+  let scannedCount = 0;
+  if (scanStatusBar) scanStatusBar.classList.add('scanning');
+  if (scanProgress) scanProgress.textContent = `Scanning: 0/${totalToScan}`;
 
   for (let i = 0; i < bookmarksToCheck.length; i += BATCH_SIZE) {
     // Check if scan was cancelled
@@ -791,14 +807,26 @@ async function autoCheckBookmarkStatuses() {
 
     const results = await Promise.all(checkPromises);
 
-    // Update results for this batch (update data only, don't render yet)
+    // Update results for this batch (update data and DOM immediately)
     results.forEach(result => {
+      // Find the original bookmark to get the URL
+      const bookmark = batch.find(b => b.id === result.id);
+      const url = bookmark ? bookmark.url : '';
+
+      // Update the data structure
       updateBookmarkInTree(result.id, {
         linkStatus: result.linkStatus,
         safetyStatus: result.safetyStatus,
         safetySources: result.safetySources
       });
+
+      // Update the DOM immediately for this bookmark
+      updateBookmarkStatusInDOM(result.id, result.linkStatus, result.safetyStatus, result.safetySources, url);
     });
+
+    // Update scan progress in status bar
+    scannedCount += results.length;
+    if (scanProgress) scanProgress.textContent = `Scanning: ${scannedCount}/${totalToScan}`;
 
     console.log(`Checked batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(bookmarksToCheck.length / BATCH_SIZE)} (${results.length} bookmarks)`);
 
@@ -811,7 +839,30 @@ async function autoCheckBookmarkStatuses() {
   // Render once at the end of all batches
   renderBookmarks();
 
+  // Update status bar to show complete
+  if (scanProgress) scanProgress.textContent = 'Scan complete';
+  if (scanStatusBar) scanStatusBar.classList.remove('scanning');
+
   console.log(`Finished checking link status for ${bookmarksToCheck.length} bookmarks (safety checks disabled - use Test VT button)`);
+}
+
+// Update total bookmark count in status bar
+function updateTotalBookmarkCount() {
+  if (!totalCount) return;
+
+  let count = 0;
+  function countBookmarksRecursive(nodes) {
+    nodes.forEach(node => {
+      if (node.type === 'bookmark' && node.url) {
+        count++;
+      } else if (node.type === 'folder' && node.children) {
+        countBookmarksRecursive(node.children);
+      }
+    });
+  }
+
+  countBookmarksRecursive(bookmarkTree);
+  totalCount.textContent = `${count} bookmark${count !== 1 ? 's' : ''}`;
 }
 
 // Mock bookmark data for preview mode
@@ -1066,8 +1117,8 @@ function renderBookmarks() {
   const dropZone = document.createElement('div');
   dropZone.className = 'root-drop-zone';
   dropZone.dataset.id = 'root-end';
-  dropZone.style.minHeight = '40px';
-  dropZone.style.marginTop = '12px';
+  dropZone.style.minHeight = '10px';
+  dropZone.style.marginTop = '4px';
 
   dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -1089,6 +1140,9 @@ function renderBookmarks() {
   });
 
   bookmarkList.appendChild(dropZone);
+
+  // Update total bookmark count in status bar
+  updateTotalBookmarkCount();
 }
 
 // Create a drop zone element that fills the gap between items
@@ -1207,6 +1261,11 @@ function getShieldHtml(safetyStatus, url, safetySources = []) {
     ? `\n⛔ Detected by: ${safetySources.join(', ')}`
     : '';
 
+  // Build warning text from actual sources
+  const warningText = safetySources && safetySources.length > 0
+    ? safetySources.map(source => `⚠ ${source}`).join('\n')
+    : '⚠ Suspicious pattern detected';
+
   const shieldSvgs = {
     'safe': `
       <span class="shield-indicator shield-safe" title="Security Check: Safe
@@ -1219,8 +1278,7 @@ function getShieldHtml(safetyStatus, url, safetySources = []) {
     `,
     'warning': `
       <span class="shield-indicator shield-warning" title="Security Check: Warning
-⚠ HTTP only (no encryption)
-⚠ URL shortener or suspicious pattern">
+${warningText}">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M13,7H11V13H13V7M13,17H11V15H13V17Z"/>
         </svg>
@@ -1443,7 +1501,7 @@ function createBookmarkElement(bookmark) {
   if (displayOptions.favicon && bookmark.url) {
     const faviconUrl = getFaviconUrl(bookmark.url);
     if (faviconUrl) {
-      faviconHtml = `<img class="bookmark-favicon" src="${escapeHtml(faviconUrl)}" alt="" onerror="this.style.display='none'" />`;
+      faviconHtml = `<img class="bookmark-favicon" src="${escapeHtml(faviconUrl)}" alt="" />`;
     }
   }
 
@@ -1563,6 +1621,14 @@ function createBookmarkElement(bookmark) {
       <img class="preview-image" alt="Preview" data-url="${escapeHtml(bookmark.url)}" />
     </div>
   `;
+
+  // Add favicon error handler to hide broken images
+  const favicon = bookmarkDiv.querySelector('.bookmark-favicon');
+  if (favicon) {
+    favicon.addEventListener('error', function() {
+      this.style.display = 'none';
+    });
+  }
 
   // Add click handler for bookmark (open in current tab)
   bookmarkDiv.addEventListener('click', (e) => {
@@ -2555,6 +2621,26 @@ function updateBookmarkInTree(bookmarkId, updates) {
     });
   };
   bookmarkTree = updateNode(bookmarkTree);
+}
+
+// Update status indicators in DOM for a specific bookmark (without full re-render)
+function updateBookmarkStatusInDOM(bookmarkId, linkStatus, safetyStatus, safetySources, url) {
+  const bookmarkElement = document.querySelector(`.bookmark-item[data-id="${bookmarkId}"]`);
+  if (!bookmarkElement) return;
+
+  const statusIndicators = bookmarkElement.querySelector('.status-indicators');
+  if (!statusIndicators) return;
+
+  // Rebuild the status indicators HTML
+  let statusIndicatorsHtml = '';
+  if (displayOptions.liveStatus && linkStatus) {
+    statusIndicatorsHtml += getStatusDotHtml(linkStatus);
+  }
+  if (displayOptions.safetyStatus && safetyStatus) {
+    statusIndicatorsHtml += getShieldHtml(safetyStatus, url, safetySources);
+  }
+
+  statusIndicators.innerHTML = statusIndicatorsHtml;
 }
 
 // Whitelist a bookmark (trust it regardless of safety checks)
