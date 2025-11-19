@@ -628,14 +628,12 @@ function loadCheckingSettings() {
 // Apply zoom
 function applyZoom() {
   const zoomFactor = zoomLevel / 100;
-  bookmarkList.style.transform = `scale(${zoomFactor})`;
-  bookmarkList.style.transformOrigin = 'top left';
-
-  // Adjust container to account for scaling
-  // When scaled down, the content takes less visual space
-  // When scaled up, it takes more visual space
-  bookmarkList.style.width = `${100 / zoomFactor}%`;
-  bookmarkList.style.height = `${100 / zoomFactor}%`;
+  // Use CSS zoom instead of transform scale - it actually changes layout size
+  // This prevents the gap issue that transform: scale() causes
+  bookmarkList.style.zoom = zoomFactor;
+  // Reset any previous transform-based zoom
+  bookmarkList.style.transform = '';
+  bookmarkList.style.width = '';
 }
 
 // Set zoom
