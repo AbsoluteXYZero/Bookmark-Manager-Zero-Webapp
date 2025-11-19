@@ -1,5 +1,8 @@
 // This script runs in the background and handles extension tasks.
 
+// Version from manifest.json - single source of truth
+const APP_VERSION = browser.runtime.getManifest().version;
+
 // Encryption utilities inlined to avoid module loading issues
 async function getDerivedKey() {
   const browserInfo = `${navigator.userAgent}-${navigator.language}-${screen.width}x${screen.height}`;
@@ -477,7 +480,7 @@ const checkGoogleSafeBrowsing = async (url) => {
         body: JSON.stringify({
           client: {
             clientId: 'bookmark-manager-zero',
-            clientVersion: '1.4.0'
+            clientVersion: APP_VERSION
           },
           threatInfo: {
             threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
