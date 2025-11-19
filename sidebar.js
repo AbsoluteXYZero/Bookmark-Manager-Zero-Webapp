@@ -1200,26 +1200,37 @@ function renderNodes(nodes, container, parentId = 'root________') {
 
 // Get status icon HTML based on link status
 function getStatusDotHtml(linkStatus) {
+  const tooltips = {
+    'live': 'Link Status: Live\n\n✓ Link is live and accessible\n✓ Returns successful HTTP response',
+    'dead': 'Link Status: Dead\n\n✗ Link is dead or unreachable\n✗ Error, timeout, or connection failed',
+    'parked': 'Link Status: Parked\n\n⚠ Domain is parked\n⚠ Redirects to domain parking service',
+    'checking': 'Link Status: Checking\n\nChecking link status...',
+    'unknown': 'Link Status: Unknown\n\nStatus has not been checked yet'
+  };
+
+  const tooltip = tooltips[linkStatus] || tooltips['unknown'];
+  const escapedTooltip = tooltip.replace(/"/g, '&quot;');
+
   const statusIcons = {
     'live': `
-      <span class="status-icon status-live" title="Link is live and accessible
-Returns successful HTTP response">
+      <span class="status-icon status-live clickable-status" title="Link is live and accessible
+Returns successful HTTP response" data-status-message="${escapedTooltip}">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
         </svg>
       </span>
     `,
     'dead': `
-      <span class="status-icon status-dead" title="Link is dead or unreachable
-Error, timeout, or connection failed">
+      <span class="status-icon status-dead clickable-status" title="Link is dead or unreachable
+Error, timeout, or connection failed" data-status-message="${escapedTooltip}">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
         </svg>
       </span>
     `,
     'parked': `
-      <span class="status-icon status-parked" title="Domain is parked
-Redirects to domain parking service">
+      <span class="status-icon status-parked clickable-status" title="Domain is parked
+Redirects to domain parking service" data-status-message="${escapedTooltip}">
         <svg width="14" height="14" viewBox="0 0 24 24">
           <g fill="currentColor">
             <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
@@ -1232,14 +1243,14 @@ Redirects to domain parking service">
       </span>
     `,
     'checking': `
-      <span class="status-icon status-checking" title="Checking link status...">
+      <span class="status-icon status-checking clickable-status" title="Checking link status..." data-status-message="${escapedTooltip}">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
         </svg>
       </span>
     `,
     'unknown': `
-      <span class="status-icon status-unknown" title="Status unknown">
+      <span class="status-icon status-unknown clickable-status" title="Status unknown" data-status-message="${escapedTooltip}">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z"/>
         </svg>
@@ -1264,45 +1275,57 @@ function getShieldHtml(safetyStatus, url, safetySources = []) {
     ? safetySources.map(source => `⚠ ${source}`).join('\n')
     : '⚠ Suspicious pattern detected';
 
+  // Build full messages for click popup
+  const messages = {
+    'safe': 'Security Check: Safe\n\n✓ Not found in malware databases\n✓ Passed URLhaus + BlockList checks',
+    'warning': `Security Check: Warning\n\n${warningText}`,
+    'unsafe': `Security Check: UNSAFE\n\n⛔ Malicious domain detected!${sourcesText}\n⛔ DO NOT VISIT - Exercise extreme caution!`,
+    'checking': 'Security Check: Analyzing\n\nChecking URL security patterns...',
+    'unknown': 'Security Check: Unknown\n\nUnable to determine safety status\nNot in whitelist or blacklist'
+  };
+
+  const message = messages[safetyStatus] || messages['unknown'];
+  const escapedMessage = message.replace(/"/g, '&quot;');
+
   const shieldSvgs = {
     'safe': `
-      <span class="shield-indicator shield-safe" title="Security Check: Safe
+      <span class="shield-indicator shield-safe clickable-status" title="Security Check: Safe
 ✓ Not found in malware databases
-✓ Passed URLhaus + BlockList checks">
+✓ Passed URLhaus + BlockList checks" data-status-message="${escapedMessage}">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M10,17L6,13L7.41,11.59L10,14.18L16.59,7.59L18,9L10,17Z"/>
         </svg>
       </span>
     `,
     'warning': `
-      <span class="shield-indicator shield-warning" title="Security Check: Warning
-${warningText}">
+      <span class="shield-indicator shield-warning clickable-status" title="Security Check: Warning
+${warningText}" data-status-message="${escapedMessage}">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M13,7H11V13H13V7M13,17H11V15H13V17Z"/>
         </svg>
       </span>
     `,
     'unsafe': `
-      <span class="shield-indicator shield-unsafe" title="Security Check: UNSAFE
+      <span class="shield-indicator shield-unsafe clickable-status" title="Security Check: UNSAFE
 ⛔ Malicious domain detected!${sourcesText}
-⛔ DO NOT VISIT - Exercise extreme caution!">
+⛔ DO NOT VISIT - Exercise extreme caution!" data-status-message="${escapedMessage}">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.1,7 14,7.9 14,9V10.5L15.5,10.5C16.3,10.5 17,11.2 17,12V16C17,16.8 16.3,17.5 15.5,17.5H8.5C7.7,17.5 7,16.8 7,16V12C7,11.2 7.7,10.5 8.5,10.5H10V9C10,7.9 10.9,7 12,7M12,8.2C11.2,8.2 10.8,8.7 10.8,9V10.5H13.2V9C13.2,8.7 12.8,8.2 12,8.2Z"/>
         </svg>
       </span>
     `,
     'checking': `
-      <span class="shield-indicator shield-scanning" title="Security Check: Analyzing
-Checking URL security patterns...">
+      <span class="shield-indicator shield-scanning clickable-status" title="Security Check: Analyzing
+Checking URL security patterns..." data-status-message="${escapedMessage}">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1Z"/>
         </svg>
       </span>
     `,
     'unknown': `
-      <span class="shield-indicator shield-unknown" title="Security Check: Unknown
+      <span class="shield-indicator shield-unknown clickable-status" title="Security Check: Unknown
 Unable to determine safety status
-Not in whitelist or blacklist">
+Not in whitelist or blacklist" data-status-message="${escapedMessage}">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
           <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12.5,7V12.5H11V7H12.5M12.5,14V15.5H11V14H12.5Z"/>
         </svg>
@@ -4645,6 +4668,16 @@ function setupEventListeners() {
         !e.target.closest('.view-btn-wrapper') &&
         !e.target.closest('.zoom-btn-wrapper')) {
       closeAllMenus();
+    }
+
+    // Handle clicks on status icons (shield and chain)
+    const statusIcon = e.target.closest('.clickable-status');
+    if (statusIcon) {
+      e.stopPropagation();
+      const message = statusIcon.dataset.statusMessage;
+      if (message) {
+        alert(message);
+      }
     }
   });
 
