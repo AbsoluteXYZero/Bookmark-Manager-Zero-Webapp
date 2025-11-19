@@ -464,7 +464,7 @@ async function init() {
   // Force update logo title to bypass cache
   const logoTitle = document.querySelector('.logo-title');
   const logoSubtitle = document.querySelector('.logo-subtitle');
-  if (logoTitle) logoTitle.innerHTML = 'Bookmark Manager Zero • <span style="color: var(--md-sys-color-primary); font-weight: 500; font-size: 11px;">v1.3.0</span>';
+  if (logoTitle) logoTitle.innerHTML = 'Bookmark Manager Zero • <span style="color: var(--md-sys-color-primary); font-weight: 500; font-size: 11px;">v1.4.0</span>';
   if (logoSubtitle) logoSubtitle.textContent = 'A modern interface for your native bookmarks';
 
   // Force update filter button icon

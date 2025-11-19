@@ -6,7 +6,7 @@
 
 **A modern, privacy-focused interface for managing your Firefox bookmarks.**
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue)](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero/releases)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue)](https://github.com/AbsoluteXYZero/Bookmark-Manager-Zero/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Firefox](https://img.shields.io/badge/firefox-compatible-orange)](https://addons.mozilla.org/firefox/)
 
@@ -419,7 +419,18 @@ Contributions welcome! Please:
 
 ## Changelog
 
-### v1.3.0 (Current) - Multiple Filters & Support
+### v1.4.0 (Current) - UI Overhaul & Enhanced Status Display
+
+**New Features:**
+- 🎨 **Stacked Status Icons** - Shield and chain icons now stack vertically, reclaiming horizontal space
+- 🔍 **Detailed Suspicious Pattern Tooltips** - Warning tooltips now show specific patterns detected (HTTP Only, URL Shortener, Suspicious TLD, IP Address)
+- 🔄 **HTTP Redirect Detection** - Detects when HTTP bookmarks redirect to HTTPS
+- 👆 **Clickable Status Icons** - Click on shield or chain to see full status details in a popup
+- 📐 **Larger Favicons** - Increased favicon size from 16px to 20px for better visibility
+- 🔧 **Context Menu Repositioning** - Menus automatically reposition to stay within viewport
+- 🐛 **Zoom Fix** - Fixed gap between content and status bar caused by CSS transform zoom
+
+### v1.3.0 - Multiple Filters & Support
 
 **New Features:**
 - 🏷️ **Multiple Filter Selection** - Select multiple filters simultaneously for advanced filtering
